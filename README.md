@@ -20,12 +20,14 @@ Estos son los paquetes en el entorno de Python que se usa:
 |djangorestframework	|3.16.0
 |mysqlclient			|2.2.7
 |sqlparse				|0.5.3
+
 Para instalar el entorno virtual, ejecutar:
 #### Linux
 > crear_repar-venv.sh
 #### Windows
 > crear_repar-venv.bat
 
+Si no, pueden usar python de un entorno global y no instalar el virtual.
 Puede pasar que no se instalen las mismas versiones. Comprobar compatibilidad con el proyecto.
 
 ## Base de datos
