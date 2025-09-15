@@ -34,7 +34,7 @@ Puede pasar que no se instalen las mismas versiones. Comprobar compatibilidad co
 Una base de datos SQL. Pueden crearlas de cero o ejecutar el archivo en la consola de SQL:
 > repar_arDB.sql
 
-Van a tener que crear su usuario y contraseña para poder ingresar como **admin**.
+Van a tener que crear su usuario y contraseña para poder ingresar como **admin** (desde *localhost:8000/admin*).
 Con este comando en la carpeta del proyecto (del backend):
 ~~~
 python manage.py createsuperuser
