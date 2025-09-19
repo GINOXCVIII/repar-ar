@@ -4,7 +4,7 @@ Integrantes del grupo:
 + Costa Lautaro
 + Ponce Matias 
 + Nuñez Olmos Imanol
-+ Caloso Lucio
++ Calosso Cístola Lucio Valentín 
 
 ## Documentación
 Documento de desarrollo de [repar-AR](https://docs.google.com/document/d/1G2IEpyodNJPts4q46dArLpPztBHe5PBiio9R-SHHq9s/edit?usp=sharing).
