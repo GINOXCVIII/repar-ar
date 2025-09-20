@@ -3,7 +3,7 @@
 Integrantes del grupo:
 + Costa Lautaro
 + Ponce Matias 
-+ Nuñez Olmos Imanol
++ Nuñez Olmos German Imanol
 + Calosso Cístola Lucio Valentín 
 
 ## Documentación
@@ -24,8 +24,23 @@ Estos son los paquetes en el entorno de Python que se usa:
 Para instalar el entorno virtual, ejecutar:
 #### Linux
 > crear_repar-venv.sh
+
+Para levantar el entorno virtual:
+~~~
+source repar-venv/bin/activate
+~~~
 #### Windows
 > crear_repar-venv.bat
+
+Para levantar el entorno virtual:
+En **CMD**
+~~~
+repar-venv\Scripts\activate
+~~~
+En **Powershell**
+~~~
+.\repar-venv\Scripts\Activate.ps1
+~~~
 
 Si no, pueden usar python de un entorno global y no instalar el virtual.
 Puede pasar que no se instalen las mismas versiones. Comprobar compatibilidad con el proyecto.
