@@ -58,7 +58,7 @@ class Trabajo(models.Model):
     ] # No conocia esto, pero puede funcionar, aunque no lo veo practico para modificaciones a futuro
 
     cliente = models.ForeignKey(RolCliente, on_delete=models.CASCADE)
-    trabajador = models.ForeignKey(RolTrabajador, on_delete=models.SET_NULL, blank=True, null=True)
+    trabajador = models.ForeignKey(RolTrabajador, on_delete=models.SET_NULL, blank=True, null=True) # El trabajador es un postulante. ¿es uno solo, son varios? ¿como manejar eso?
     profesion = models.ForeignKey(Profesion, on_delete=models.CASCADE)
     zona_geo = models.ForeignKey(ZonaGeografica, on_delete=models.SET_NULL, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
@@ -89,13 +89,13 @@ class ZonaGeografica(models.Model):
         return f"{self.ciudad}, {self.provincia}"
 """
 
-"""
+
 class Postulacion(models.Model):
     trabajo = models.ForeignKey(Trabajo, on_delete=models.CASCADE)
     trabajador = models.ForeignKey(RolTrabajador, on_delete=models.CASCADE)
     mensaje = models.TextField(blank=True, null=True)
     fecha_postulacion = models.DateTimeField(auto_now_add=True)
-"""
+
 
 class Calificacion(models.Model):
     id_calificacion = models.AutoField(primary_key=True)
