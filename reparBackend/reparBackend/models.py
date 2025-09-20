@@ -54,7 +54,7 @@ class CalificacionTrabajador(models.Model):
     id_contratador = models.ForeignKey(Contratador, on_delete=models.CASCADE, db_column='id_contratador') 
     id_trabajador = models.ForeignKey(Trabajador, on_delete=models.CASCADE, db_column='id_trabajador')
     id_trabajo = models.ForeignKey(Trabajo, on_delete=models.CASCADE, db_column='id_trabajo')
-    calificacion = models.FloatField(max_decimal_places=1, validators=[MinValueValidator(1.0), MaxValueValidator(5.0)])
+    calificacion = models.DecimalField(max_digits=2, decimal_places=1, validators=[MinValueValidator(1.0), MaxValueValidator(5.0)])
     comentario = models.CharField(max_length=500)
     fecha_calificacion = models.DateTimeField()
 
@@ -63,7 +63,7 @@ class CalificacionContratador(models.Model):
     id_contratador = models.ForeignKey(Contratador, on_delete=models.CASCADE, db_column='id_contratador') 
     id_trabajador = models.ForeignKey(Trabajador, on_delete=models.CASCADE, db_column='id_trabajador')
     id_trabajo = models.ForeignKey(Trabajo, on_delete=models.CASCADE, db_column='id_trabajo')
-    calificacion = models.FloatField(max_decimal_places=1, validators=[MinValueValidator(1.0), MaxValueValidator(5.0)])
+    calificacion = models.DecimalField(max_digits=2, decimal_places=1, validators=[MinValueValidator(1.0), MaxValueValidator(5.0)])
     comentario = models.CharField(max_length=500)
     fecha_calificacion = models.DateTimeField()
 

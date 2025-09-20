@@ -2,7 +2,7 @@
 
 ### Modelos y tablas en la base de datos
 ~~~
-python manage.py makemigrations
+python manage.py makemigrations reparBackend
 ~~~
 
 Reconoce cambios en los modelos y prepara la creación de nuevas tablas.
