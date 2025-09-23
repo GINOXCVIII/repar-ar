@@ -17,8 +17,44 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-# from views imports *
+# from .views imports *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
+
+"""
+        path('api/zonas-geograficas', ZonaGeograficaView.as_view()),
+        path('api/zonas-geograficas/<int:id>', ZonaGeograficaView.as_view()),
+        
+        'path(api/profesiones', ProfesionView.as_view()),
+        'path(api/profesiones/<int:id>', ProfesionView.as_view()),
+        
+        path('api/estados', EstadoView.as_view()),
+        path('api/estados/<int:id>', EstadoView.as_view()),
+        
+        path('api/contratadores', ContratadorView.as_view()),
+        path('api/contratadores/<int:id>', ContratadorView.as_view()),
+        
+        path('api/trabajadores', TrabajadorView.as_view()),
+        path('api/trabajadores/<int:id>', TrabajadorView.as_view()),
+        
+        path('api/trabajos', TrabajoView.as_view()),
+        path('api/trabajos/<int:id>', TrabajoView.as_view()),
+        
+        path('api/postulaciones', PostulacionView.as_view()),
+        path('api/postulaciones/<int:id>', PostulacionView.as_view()),
+        
+        path('api/calificaciones', CalificacionesView.as_view()), # Vista para mostrar todos los comentarios, de contratadores y de trabajadores
+        
+        path('api/calificaciones/calificaciones-trabajadores', CalificacionTrabajadorView.as_view()),
+        path('api/calificaciones/calificaciones-trabajadores/<int:id>', CalificacionTrabajadorView.as_view()),
+        
+        path('api/calificaciones/calificaciones-contratadores', CalificacionContratadorView.as_view()),
+        path('api/calificaciones/calificaciones-contratadores/<int:id>', CalificacionContratadorView.as_view()),
+        
+        path('api/profesiones-de-trabajadores', TrabajadoresProfesionView.as_view()),
+        path('api/profesiones-de-trabajadores/<int:id>', TrabajadoresProfesionView.as_view()),
+"""
+
+

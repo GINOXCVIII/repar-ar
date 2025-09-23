@@ -148,3 +148,4 @@ class TrabajadoresProfesion(models.Model):
     def __str__(self):
         return f"{self.id_trabajador}: {self.id_profesion.nombre_profesion} MN: {self.matricula}"
 
+
