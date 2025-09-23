@@ -23,7 +23,7 @@ class Profesion(models.Model):
         verbose_name_plural = "Profesiones"
         
     def __str__(self):
-        return self.nombre_profesion
+        return f"{self.nombre_profesion}"
 
 class Estado(models.Model):
     id_estado = models.AutoField(primary_key=True)
@@ -117,7 +117,7 @@ class CalificacionTrabajador(models.Model):
         verbose_name_plural = "Cafilicaciones de trabajadores"
         
     def __str__(self):
-        return self.id_calificacion_trabajador
+        return f"{self.id_calificacion_trabajador}"
 
 class CalificacionContratador(models.Model):
     id_calificacion_contratador = models.AutoField(primary_key=True)
@@ -133,7 +133,7 @@ class CalificacionContratador(models.Model):
         verbose_name_plural = "Cafilicaciones de contratadores"
         
     def __str__(self):
-        return self.id_calificacion_contratador
+        return f"{self.id_calificacion_contratador}"
 
 class TrabajadoresProfesion(models.Model):
     id_trabajador_profesion = models.AutoField(primary_key=True)
@@ -147,3 +147,4 @@ class TrabajadoresProfesion(models.Model):
         
     def __str__(self):
         return f"{self.id_trabajador}: {self.id_profesion.nombre_profesion} MN: {self.matricula}"
+
