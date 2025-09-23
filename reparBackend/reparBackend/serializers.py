@@ -88,7 +88,7 @@ class TrabajadorSerializer(serializers.ModelSerializer):
 class TrabajadoresProfesionSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = Trabajador
+        model = TrabajadoresProfesion
         fields = ('id_trabajador_profesion', 'id_trabajador', 'id_profesion', 'matricula')
         
     trabajador = serializers.SerializerMethodField()
