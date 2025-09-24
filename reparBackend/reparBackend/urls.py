@@ -1,60 +1,52 @@
-"""
-URL configuration for reparBackend project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path
 
-# from .views imports *
+from .views import (
+    ZonaGeograficaView,
+    ProfesionView,
+    EstadoView,
+    ContratadorView,
+    TrabajadorView,
+    TrabajoView,
+    PostulacionView,
+    CalificacionesView,
+    CalificacionTrabajadorView,
+    CalificacionContratadorView,
+    TrabajadoresProfesionView
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path('api/zonas-geograficas/', ZonaGeograficaView.as_view(), name='zona-lista'),
+    path('api/zonas-geograficas/<int:id>/', ZonaGeograficaView.as_view(), name='zona-detalle'),
+    
+    path('api/profesiones/', ProfesionView.as_view(), name='profesion-lista'),
+    path('api/profesiones/<int:id>/', ProfesionView.as_view(), name='profesion-detalle'),
+    
+    path('api/estados/', EstadoView.as_view(), name='estado-lista'),
+    path('api/estados/<int:id>/', EstadoView.as_view(), name='estado-detalle'),
+    
+    path('api/contratadores/', ContratadorView.as_view(), name='contratador-lista'),
+    path('api/contratadores/<int:id>/', ContratadorView.as_view(), name='contratador-detalle'),
+    
+    path('api/trabajadores/', TrabajadorView.as_view(), name='trabajador-lista'),
+    path('api/trabajadores/<int:id>/', TrabajadorView.as_view(), name='trabajador-detalle'),
+    
+    path('api/trabajos/', TrabajoView.as_view(), name='trabajo-lista'),
+    path('api/trabajos/<int:id>/', TrabajoView.as_view(), name='trabajo-detalle'),
+    
+    path('api/postulaciones/', PostulacionView.as_view(), name='postulacion-lista'),
+    path('api/postulaciones/<int:id>/', PostulacionView.as_view(), name='postulacion-detalle'),
+    
+    path('api/calificaciones/', CalificacionesView.as_view(), name='calificaciones-general'),
+    
+    path('api/calificaciones/calificaciones-trabajadores/', CalificacionTrabajadorView.as_view(), name='calif-trabajador-lista'),
+    path('api/calificaciones/calificaciones-trabajadores/<int:id>/', CalificacionTrabajadorView.as_view(), name='calif-trabajador-detalle'),
+    
+    path('api/calificaciones/calificaciones-contratadores/', CalificacionContratadorView.as_view(), name='calif-contratador-lista'),
+    path('api/calificaciones/calificaciones-contratadores/<int:id>/', CalificacionContratadorView.as_view(), name='calif-contratador-detalle'),
+    
+    path('api/profesiones-de-trabajadores/', TrabajadoresProfesionView.as_view(), name='trabajador-profesion-lista'),
+    path('api/profesiones-de-trabajadores/<int:id>/', TrabajadoresProfesionView.as_view(), name='trabajador-profesion-detalle'),
 ]
-
-"""
-        path('api/zonas-geograficas', ZonaGeograficaView.as_view()),
-        path('api/zonas-geograficas/<int:id>', ZonaGeograficaView.as_view()),
-        
-        'path(api/profesiones', ProfesionView.as_view()),
-        'path(api/profesiones/<int:id>', ProfesionView.as_view()),
-        
-        path('api/estados', EstadoView.as_view()),
-        path('api/estados/<int:id>', EstadoView.as_view()),
-        
-        path('api/contratadores', ContratadorView.as_view()),
-        path('api/contratadores/<int:id>', ContratadorView.as_view()),
-        
-        path('api/trabajadores', TrabajadorView.as_view()),
-        path('api/trabajadores/<int:id>', TrabajadorView.as_view()),
-        
-        path('api/trabajos', TrabajoView.as_view()),
-        path('api/trabajos/<int:id>', TrabajoView.as_view()),
-        
-        path('api/postulaciones', PostulacionView.as_view()),
-        path('api/postulaciones/<int:id>', PostulacionView.as_view()),
-        
-        path('api/calificaciones', CalificacionesView.as_view()), # Vista para mostrar todos los comentarios, de contratadores y de trabajadores
-        
-        path('api/calificaciones/calificaciones-trabajadores', CalificacionTrabajadorView.as_view()),
-        path('api/calificaciones/calificaciones-trabajadores/<int:id>', CalificacionTrabajadorView.as_view()),
-        
-        path('api/calificaciones/calificaciones-contratadores', CalificacionContratadorView.as_view()),
-        path('api/calificaciones/calificaciones-contratadores/<int:id>', CalificacionContratadorView.as_view()),
-        
-        path('api/profesiones-de-trabajadores', TrabajadoresProfesionView.as_view()),
-        path('api/profesiones-de-trabajadores/<int:id>', TrabajadoresProfesionView.as_view()),
-"""
-
-
