@@ -39,7 +39,10 @@ class TrabajadorSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Trabajador
-        fields = ('id_trabajador', 'id_contratador', 'id_zona_geografica_trabajador', 'telefono_trabajador', 'mail_trabajador')
+        fields = ('id_trabajador', 'id_contratador', 'id_zona_geografica_trabajador', 
+                  'telefono_trabajador', 'mail_trabajador', 
+                  'contratador', 'zona_geografica_trabajador'
+                  )
         
     contratador = serializers.SerializerMethodField()
     zona_geografica_trabajador = serializers.SerializerMethodField()
@@ -48,11 +51,11 @@ class TrabajadorSerializer(serializers.ModelSerializer):
     id_zona_geografica_trabajador = serializers.IntegerField(write_only=True)
     
     def get_contratador(self, obj):
-        contratador = obj.contratador
+        contratador = obj.id_contratador
         return ContratadorSerializer(contratador).data
     
     def get_zona_geografica_trabajador(self, obj):
-        zona_geografica_trabajador = obj.zona_geografica_trabajador
+        zona_geografica_trabajador = obj.id_zona_geografica_trabajador
         return ZonaGeograficaSerializer(zona_geografica_trabajador).data
     
     def create(self, validated_data):
@@ -89,7 +92,8 @@ class TrabajadoresProfesionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TrabajadoresProfesion
-        fields = ('id_trabajador_profesion', 'id_trabajador', 'id_profesion', 'matricula')
+        fields = ('id_trabajador_profesion', 'id_trabajador', 'id_profesion', 'matricula',
+                  'trabajador', 'profesion')
         
     trabajador = serializers.SerializerMethodField()
     profesion = serializers.SerializerMethodField()
@@ -98,11 +102,11 @@ class TrabajadoresProfesionSerializer(serializers.ModelSerializer):
     id_profesion = serializers.IntegerField(write_only=True)
     
     def get_trabajador(self, obj):
-        trabajador = obj.trabajador
+        trabajador = obj.id_trabajador
         return TrabajadorSerializer(trabajador).data
     
     def get_profesion(self, obj):
-        profesion = obj.profesion
+        profesion = obj.id_profesion
         return ProfesionSerializer(profesion).data
     
     def create(self, validated_data):
@@ -139,7 +143,8 @@ class TrabajoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trabajo
         fields = ('id_trabajo', 'id_contratador', 'id_trabajador', 'id_profesion_requerida', 'id_zona_geografica_trabajo', 'id_estado',
-                  'descripcion', 'fecha_creacion', 'fecha_inicio', 'fecha_fin')
+                  'descripcion', 'fecha_creacion', 'fecha_inicio', 'fecha_fin',
+                  'contratador', 'trabajador', 'profesion_requerida', 'zona_geografica_trabajo', 'estado')
         
     contratador = serializers.SerializerMethodField()
     trabajador = serializers.SerializerMethodField()
@@ -154,23 +159,23 @@ class TrabajoSerializer(serializers.ModelSerializer):
     id_estado = serializers.IntegerField(write_only=True)
         
     def get_contratador(self, obj):
-        contratador = obj.contratador
+        contratador = obj.id_contratador
         return ContratadorSerializer(contratador).data
     
     def get_trabajador(self, obj):
-        trabajador = obj.trabajador
+        trabajador = obj.id_trabajador
         return TrabajadorSerializer(trabajador).data
     
     def get_profesion_requerida(self, obj):
-        profesion_requerida = obj.profesion_requerida
+        profesion_requerida = obj.id_profesion_requerida
         return ProfesionSerializer(profesion_requerida).data
     
     def get_zona_geografica_trabajo(self, obj):
-        zona_geografica_trabajo = obj.zona_geografica_trabajo
+        zona_geografica_trabajo = obj.id_zona_geografica_trabajo
         return ZonaGeograficaSerializer(zona_geografica_trabajo).data
     
     def get_estado(self, obj):
-        estado = obj.estado
+        estado = obj.id_estado
         return EstadoSerializer(estado).data
 
     def create(self, validated_data):
@@ -225,7 +230,9 @@ class PostulacionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Postulacion
-        fields = ('id_postulacion', 'id_trabajo', 'id_trabajador', 'fecha_postulacion')
+        fields = ('id_postulacion', 'id_trabajo', 'id_trabajador', 'fecha_postulacion',
+                  'trabajo', 'trabajador'
+                  )
         
     trabajo = serializers.SerializerMethodField()
     trabajador = serializers.SerializerMethodField()
@@ -234,11 +241,11 @@ class PostulacionSerializer(serializers.ModelSerializer):
     id_trabajador = serializers.IntegerField(write_only=True)
     
     def get_trabajo(self, obj):
-        trabajo = obj.trabajo
+        trabajo = obj.id_trabajo
         return TrabajoSerializer(trabajo).data
     
     def get_trabajador(self, obj):
-        trabajador = obj.trabajador
+        trabajador = obj.id_trabajador
         return TrabajadorSerializer(trabajador).data
     
     def create(self, validated_data):
