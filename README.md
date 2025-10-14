@@ -48,6 +48,7 @@ Puede pasar que no se instalen las mismas versiones. Comprobar compatibilidad co
 ## Base de datos
 Una base de datos SQL. 
 Queries SQL disponibles en la carpeta [SQL_queries](https://github.com/GINOXCVIII/repar-ar/tree/main/SQL_queries)
+
 Pueden crearlas de cero o ejecutar el archivo en la consola de SQL:
 > repar_arDB.sql
 
@@ -55,7 +56,7 @@ La tabla de estados se completa con los datos disponibles en:
 > repar_arDB-estado.sql
 
 Las profesiones se cargan desde el archivo:
-**COMPLETAR**
+> repar_arDB-profesion.sql
 
 Van a tener que crear su usuario y contraseña para poder ingresar como **admin** (desde *localhost:8000/admin*).
 Con este comando en la carpeta del proyecto (del backend):
