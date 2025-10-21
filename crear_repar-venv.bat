@@ -6,7 +6,7 @@ python -m venv repar-venv
 
 call repar-venv\Scripts\activate.bat
 
-set paquetes="Django==4.2" "djangorestframework==3.16.0" "mysqlclient==2.2.7"
+set paquetes="Django==4.2" "djangorestframework==3.16.0" "mysqlclient==2.2.7" "firebase-admin"
 
 where python
 
