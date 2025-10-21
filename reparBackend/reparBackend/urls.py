@@ -12,7 +12,9 @@ from .views import (
     CalificacionesView,
     CalificacionTrabajadorView,
     CalificacionContratadorView,
-    TrabajadoresProfesionView
+    TrabajadoresProfesionView,
+    FirebaseLoginView, 
+    FirebaseRegisterView
 )
 
 urlpatterns = [
@@ -49,4 +51,8 @@ urlpatterns = [
     
     path('api/profesiones-de-trabajadores/', TrabajadoresProfesionView.as_view(), name='trabajador-profesion-lista'),
     path('api/profesiones-de-trabajadores/<int:id>/', TrabajadoresProfesionView.as_view(), name='trabajador-profesion-detalle'),
+    
+    path('api/auth/firebase-login/', FirebaseLoginView.as_view(), name='firebase-login'),
+    path('api/auth/firebase-register/', FirebaseRegisterView.as_view(), name='firebase-register'),
+    
 ]

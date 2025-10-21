@@ -5,6 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
+from firebase_admin import auth as firebase_auth
+from django.db import transaction
+
 # Importamos todos los modelos y serializadores necesarios
 from .models import (
     ZonaGeografica,
@@ -377,3 +380,91 @@ class CalificacionesView(APIView):
         }
         
         return Response(datos_combinados, status=status.HTTP_200_OK)
+    
+# Vistas de autenticacion de usuarios
+
+class FirebaseLoginView(APIView):
+    """
+    Verifica el token de Firebase.
+    Si el usuario ya está registrado en Contratador, lo devuelve.
+    Si no, informa que es un nuevo usuario que debe completar sus datos.
+    """
+    def post(self, request):
+        token = request.data.get('token')
+
+        if not token:
+            return Response({"error": "Falta el token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            decoded = firebase_auth.verify_id_token(token)
+            uid = decoded.get('uid')
+            email_firebase = decoded.get('email')
+
+            contratador = Contratador.objects.filter(uid_firebase=uid).first()
+
+            if contratador:
+                data = ContratadorSerializer(contratador).data
+                data['registrado'] = True
+                return Response(data, status=status.HTTP_200_OK)
+
+            # No existe aún en la base
+            return Response({
+                "registrado": False,
+                "mensaje": "Usuario autenticado pero sin registro en la base.",
+                "uid_firebase": uid,
+                "email_firebase": email_firebase
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class FirebaseRegisterView(APIView):
+    @transaction.atomic
+    def post(self, request):
+        data = request.data
+        uid_firebase = data.get('uid_firebase')
+        zona_data = data.get('zona_geografica')
+
+        if not uid_firebase:
+            return Response({"error": "Falta uid_firebase"}, status=status.HTTP_400_BAD_REQUEST)
+        if not zona_data:
+            return Response({"error": "Faltan datos de zona_geografica"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Evitar duplicados
+        if Contratador.objects.filter(uid_firebase=uid_firebase).exists():
+            return Response({"error": "Ya existe un contratador con ese uid_firebase"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Crear zona geográfica primero
+        zona_serializer = ZonaGeograficaSerializer(data=zona_data)
+        if not zona_serializer.is_valid():
+            return Response(zona_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        zona = zona_serializer.save()
+
+        # Crear contratador asociado
+        contratador_data = {
+            "uid_firebase": uid_firebase,
+            "nombre": data.get("nombre"),
+            "apellido": data.get("apellido"),
+            "email_contratador": data.get("email_contratador"),
+            "telefono_contratador": data.get("telefono_contratador"),
+            "dni": data.get("dni"),
+            "id_zona_geografica_contratador": zona.id_zona_geografica
+        }
+
+        contratador_serializer = ContratadorSerializer(data=contratador_data)
+        if not contratador_serializer.is_valid():
+            transaction.set_rollback(True)
+            return Response(contratador_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        contratador = contratador_serializer.save()
+
+        return Response({
+            "mensaje": "Datos cargados con éxito.",
+            "contratador": ContratadorSerializer(contratador).data,
+            "zona_geografica": ZonaGeograficaSerializer(zona).data
+        }, status=status.HTTP_201_CREATED)
+
+
+
+

@@ -44,6 +44,7 @@ class Contratador(models.Model):
     email_contratador = models.EmailField(max_length=100)
     telefono_contratador = models.BigIntegerField()
     dni = models.IntegerField()
+    uid_firebase = models.CharField(max_length=128, blank=True, null=True, unique=True)
     
     class Meta:
         verbose_name = "Contratador"

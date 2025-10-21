@@ -33,4 +33,5 @@ Corre el servidor en *localhost* en puerto *8000*
 
 Fuente: [django-admin and manage.py](https://docs.djangoproject.com/en/5.2/ref/django-admin/)
 
+¡¡¡**PELIGRO:** NO USAR el archivo test_token_gen.py sin avisar!!!
 

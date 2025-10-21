@@ -12,7 +12,7 @@ Documento de desarrollo de [repar-AR](https://docs.google.com/document/d/1G2IEpy
 Presentación del proyecto: [repar-AR Canvas Presentacion](https://www.canva.com/design/DAGmg2JA5QE/lCWQPSFfzHYiAkWrxTltdA/edit?utm_content=DAGmg2JA5QE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
 ## Creación entorno virtual
-Estos son los paquetes en el entorno de Python que se usa:
+Estos son los paquetes en el entorno de Python que se usa (pueden aparecer otros en la lista final):
 |Paquete                |Versión                      |
 |-----------------------|-----------------------------|
 |asgiref				|3.8.1
@@ -20,6 +20,7 @@ Estos son los paquetes en el entorno de Python que se usa:
 |djangorestframework	|3.16.0
 |mysqlclient			|2.2.7
 |sqlparse				|0.5.3
+|firebase_admin         |7.1.0
 
 Para instalar el entorno virtual, ejecutar:
 #### Linux
@@ -49,8 +50,7 @@ Puede pasar que no se instalen las mismas versiones. Comprobar compatibilidad co
 Una base de datos SQL. 
 Queries SQL disponibles en la carpeta [SQL_queries](https://github.com/GINOXCVIII/repar-ar/tree/main/SQL_queries)
 
-Pueden crearlas de cero o ejecutar el archivo en la consola de SQL:
-> repar_arDB.sql
+Para crear la base de datos, se deben usar las instrucciones en [ReparBackend](https://github.com/GINOXCVIII/repar-ar/tree/main/reparBackend), y los comandos necesarios.
 
 La tabla de estados se completa con los datos disponibles en:
 > repar_arDB-estado.sql
