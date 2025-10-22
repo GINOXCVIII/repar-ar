@@ -21,6 +21,7 @@ Estos son los paquetes en el entorno de Python que se usa (pueden aparecer otros
 |mysqlclient			|2.2.7
 |sqlparse				|0.5.3
 |firebase_admin         |7.1.0
+|django-cors-headers  |4.9.0
 
 Para instalar el entorno virtual, ejecutar:
 #### Linux
