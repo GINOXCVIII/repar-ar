@@ -208,11 +208,58 @@ class TrabajoView(APIView):
         serializer = TrabajoSerializer(items, many=True)
         return Response(serializer.data)
 
+    """
     def post(self, request):
         serializer = TrabajoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    """
+
+    @transaction.atomic
+    def post(self, request):
+        data = request.data
+        zona_data = data.pop('zona_geografica_trabajo_data', None) 
+        id_zona_trabajo = data.get('id_zona_geografica_trabajo') # Puede contener el ID de la zona del contratador (el fallback)
+        
+        # Buscar/Crear (si se enviaron datos nuevos)
+        if zona_data:
+            try:
+                zona_existente = ZonaGeografica.objects.get(
+                    calle=zona_data.get('calle'),
+                    ciudad=zona_data.get('ciudad'),
+                    provincia=zona_data.get('provincia'),
+                )
+                # Si existe
+                id_zona_trabajo = zona_existente.id_zona_geografica
+            except ZonaGeografica.DoesNotExist:
+                # Si no, crear
+                zona_serializer = ZonaGeograficaSerializer(data=zona_data)
+                if not zona_serializer.is_valid():
+                    # Si falla la validación de la zona, revertimos la transacción
+                    transaction.set_rollback(True)
+                    return Response(zona_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                zona = zona_serializer.save()
+                id_zona_trabajo = zona.id_zona_geografica
+        
+        # Validar la Zona
+        if not id_zona_trabajo:
+            # Esto es una validación de seguridad si el frontend falló en el fallback
+            return Response({"error": "Falta id_zona_geografica_trabajo y no se proporcionó una zona nueva para crear."}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Asignar el ID
+        data['id_zona_geografica_trabajo'] = id_zona_trabajo
+        
+        # Crear el Trabajo
+        serializer = TrabajoSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # Si falla la validación del trabajo, revertimos la transacción
+        transaction.set_rollback(True)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, id):
