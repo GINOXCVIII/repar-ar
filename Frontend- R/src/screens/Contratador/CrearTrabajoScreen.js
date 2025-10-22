@@ -65,6 +65,8 @@ const CrearTrabajoScreen = ({ navigation }) => {
         payload.id_trabajador = profile.id_trabajador;
       }
 
+      console.log("Contenido de payload: ", payload)
+
       const res = await axios.post(`${BASE_URL}/trabajos/`, payload);
       Alert.alert("Trabajo creado", "El trabajo fue creado correctamente.");
       // limpiar form

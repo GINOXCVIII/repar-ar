@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native';
 import api from '../api/api';
 
-const PROFESIONES = ['Albañil','Carpintero','Cerrajero','Electricista','Gasista','Jardinero','Pintor','Plomero'];
+// const PROFESIONES = ['Albañil','Carpintero','Cerrajero','Electricista','Gasista','Jardinero','Pintor','Plomero'];
 
 export default function PublishJobScreen({ navigation }) {
   const [title, setTitle] = useState('');

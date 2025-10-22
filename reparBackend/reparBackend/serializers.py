@@ -191,18 +191,20 @@ class TrabajoSerializer(serializers.ModelSerializer):
         return EstadoSerializer(estado).data
 
     def create(self, validated_data):
+        # id_contratador = validated_data.pop('id_contratador')
         id_contratador = validated_data.pop('id_contratador')
-        id_trabajador = validated_data.pop('id_trabajador')
+        # id_trabajador = validated_data.pop('id_trabajador')
         id_profesion_requerida = validated_data.pop('id_profesion_requerida')
         id_zona_geografica_trabajo = validated_data.pop('id_zona_geografica_trabajo')
         id_estado = validated_data.pop('id_estado')
         
         trabajo = Trabajo.objects.create(
-        id_contratador = id_contratador,
-        id_trabajador = id_trabajador,
-        id_profesion_requerida = id_profesion_requerida,
-        id_zona_geografica_trabajo = id_zona_geografica_trabajo, 
-        id_estado = id_estado,
+            # Aplico convesiones de acceso a FK de Django ORM
+            id_contratador_id = id_contratador,
+            # id_trabajador = id_trabajador,
+            id_profesion_requerida_id = id_profesion_requerida,
+            id_zona_geografica_trabajo_id = id_zona_geografica_trabajo, 
+            id_estado_id = id_estado,
             **validated_data
             )
             
@@ -219,19 +221,19 @@ class TrabajoSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
             
         if id_contratador is not None:
-            instance.id_contratador = id_contratador
+            instance.id_contratador_id = id_contratador
             
         if id_trabajador is not None:
-            instance.id_trabajador = id_trabajador
+            instance.id_trabajador_id = id_trabajador
             
         if id_profesion_requerida is not None:
-            instance.id_profesion_requerida = id_profesion_requerida
+            instance.id_profesion_requerida_id = id_profesion_requerida
             
         if id_zona_geografica_trabajo is not None:
-            instance.id_zona_geografica_trabajo = id_zona_geografica_trabajo
+            instance.id_zona_geografica_trabajo_id = id_zona_geografica_trabajo
             
         if id_estado is not None:
-            instance.id_estado = id_estado
+            instance.id_estado_id = id_estado
             
         instance.save()
         
