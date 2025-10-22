@@ -7,7 +7,7 @@ python3 -m venv repar-venv
 
 source repar-venv/bin/activate
 
-paquetes=("Django==4.2" "djangorestframework==3.16.0" "mysqlclient==2.2.7" "firebase-admin")
+paquetes=("Django==4.2" "djangorestframework==3.16.0" "mysqlclient==2.2.7" "firebase-admin==7.1.0" "django-cors-headers==4.9.0")
 
 which python
 which python3
