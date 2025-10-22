@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     // la API puede devolver "contratador" con llave id_contratador o id
     const id = data.id_contratador ?? data.id ?? data.id_contratador;
     // zona puede venir como id o como objeto zona_geografica
-    const zona = data.id_zona_geografica_contratador ?? data.zona_geografica ?? null;
+    const zona = data.zona_geografica_contratador ?? data.zona_geografica ?? null;
     const zonaId = zona?.id_zona_geografica ?? zona?.id ?? zona ?? null;
     return {
       raw: data,
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
       dni: data.dni ?? "",
       // si el backend envía la zona como objeto:
       id_zona_geografica_contratador: zonaId,
-      zona_geografica_obj: zona,
+      zona_geografica_contratador: zona,
     };
   };
 
@@ -182,7 +182,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const payload = {
         id_contratador: profile.id_contratador,
-        id_zona_geografica_trabajador: profile.id_zona_geografica_contratador ?? (profile.zona_geografica_obj?.id_zona_geografica ?? null),
+        id_zona_geografica_trabajador: profile.id_zona_geografica_contratador ?? (profile.zona_geografica_contratador?.id_zona_geografica ?? null),
         telefono_trabajador: profile.telefono_contratador ?? "",
         mail_trabajador: profile.email_contratador ?? "",
         ...extra,

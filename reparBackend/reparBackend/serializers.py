@@ -33,7 +33,18 @@ class EstadoSerializer(serializers.ModelSerializer):
 class ContratadorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contratador
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ('id_contratador', 'id_zona_geografica_contratador', 'nombre', 'apellido', 
+                  'email_contratador', 'telefono_contratador', 'dni', 'uid_firebase', 'zona_geografica_contratador')
+        
+    zona_geografica_contratador = serializers.SerializerMethodField()
+        
+    id_zona_geografica_contratador = serializers.IntegerField(write_only=True)
+        
+    def get_zona_geografica_contratador(self, obj):
+        zona_geografica_contratador = obj.id_zona_geografica_contratador
+        return ZonaGeograficaSerializer(zona_geografica_contratador).data
+        
 
 class TrabajadorSerializer(serializers.ModelSerializer):
     
@@ -153,7 +164,8 @@ class TrabajoSerializer(serializers.ModelSerializer):
     estado = serializers.SerializerMethodField()
         
     id_contratador = serializers.IntegerField(write_only=True)
-    id_trabajador = serializers.IntegerField(write_only=True)
+    # id_trabajador = serializers.IntegerField(write_only=True)
+    id_trabajador = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     id_profesion_requerida = serializers.IntegerField(write_only=True)
     id_zona_geografica_trabajo = serializers.IntegerField(write_only=True)
     id_estado = serializers.IntegerField(write_only=True)

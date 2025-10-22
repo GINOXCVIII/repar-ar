@@ -43,16 +43,27 @@ const CrearTrabajoScreen = ({ navigation }) => {
       // Construyo payload según serializers.py / models.py que tienes en backend
       const payload = {
         id_contratador: profile.id_contratador,
-        id_trabajador: null,
+        // id_trabajador: null,
         id_profesion_requerida: profesionId,
-        id_zona_geografica_trabajo: profile.id_zona_geografica_contratador ?? profile.zona_geografica_obj?.id_zona_geografica ?? null,
+        id_zona_geografica_trabajo: profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador?.id_zona_geografica ?? null,
         id_estado: 1, // asumimos estado por defecto (1). Ajustar si tu backend requiere otro id.
         descripcion: descripcion,
         fecha_creacion: new Date().toISOString(),
-        fecha_inicio: null,
-        fecha_fin: null,
+        // fecha_inicio: null,
+        // fecha_fin: null,
         // otros campos que tu serializer acepte pueden agregarse
       };
+
+      // Solo agregar si tienen valor
+      if (profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador?.id_zona_geografica) {
+        payload.id_zona_geografica_trabajo =
+        profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador.id_zona_geografica;
+      }
+
+      // Si no hay trabajador asignado todavía, no lo agregamos:
+      if (profile.id_trabajador) {
+        payload.id_trabajador = profile.id_trabajador;
+      }
 
       const res = await axios.post(`${BASE_URL}/trabajos/`, payload);
       Alert.alert("Trabajo creado", "El trabajo fue creado correctamente.");

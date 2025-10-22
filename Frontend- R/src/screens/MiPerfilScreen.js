@@ -21,21 +21,22 @@ const MiPerfilScreen = ({ navigation }) => {
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
-  useEffect(() => {
-    if (profile) {
-      // profile puede venir normalizado por AuthProvider
-      setForm({
-        nombre: profile.nombre ?? "",
-        apellido: profile.apellido ?? "",
-        email_contratador: profile.email_contratador ?? firebaseUser?.email ?? "",
-        telefono_contratador: profile.telefono_contratador ?? "",
-        dni: profile.dni ?? "",
-        calle: profile.zona_geografica_obj?.calle ?? profile.raw?.calle ?? "",
-        ciudad: profile.zona_geografica_obj?.ciudad ?? profile.raw?.ciudad ?? "",
-        provincia: profile.zona_geografica_obj?.provincia ?? profile.raw?.provincia ?? "",
-      });
-    }
-  }, [profile, firebaseUser]);
+useEffect(() => {
+  console.log("🧭 Datos del perfil:", profile);
+  console.log("🌎 Zona geográfica del contratador:", profile.zona_geografica_contratador);
+  if (profile) {
+    setForm({
+      nombre: profile.nombre ?? "",
+      apellido: profile.apellido ?? "",
+      email_contratador: profile.email_contratador ?? firebaseUser?.email ?? "",
+      telefono_contratador: profile.telefono_contratador ?? "",
+      dni: profile.dni ?? "",
+      calle: profile.zona_geografica_contratador?.calle ?? "",
+      ciudad: profile.zona_geografica_contratador?.ciudad ?? "",
+      provincia: profile.zona_geografica_contratador?.provincia ?? "",
+    });
+  }
+}, [profile, firebaseUser]);
 
   const handleChange = (field, value) => setForm((p) => ({ ...p, [field]: value }));
 
@@ -62,11 +63,11 @@ const MiPerfilScreen = ({ navigation }) => {
           dni: form.dni,
         };
         // Si backend espera id_zona_geografica_contratador como integer, deberíamos crear o actualizar zona aparte.
-        // Para simplicidad: si profile.zona_geografica_obj tiene id -> PATCH zona, sino -> POST zona y usar id resultante.
-        if (profile.zona_geografica_obj?.id_zona_geografica) {
+        // Para simplicidad: si profile.zona_geografica_contratador tiene id -> PATCH zona, sino -> POST zona y usar id resultante.
+        if (profile.zona_geografica_contratador?.id_zona_geografica) {
           // actualizar zona
           try {
-            await axios.patch(`${BASE_URL}/zonas-geograficas/${profile.zona_geografica_obj.id_zona_geografica}/`, payloadZona);
+            await axios.patch(`${BASE_URL}/zonas-geograficas/${profile.zona_geografica_contratador.id_zona_geografica}/`, payloadZona);
           } catch (e) {
             // ignoramos si no está soportada la patch
             console.warn("No se pudo patch zona:", e.response?.data || e);
@@ -113,7 +114,7 @@ const MiPerfilScreen = ({ navigation }) => {
           telefono_contratador: res.data.telefono_contratador ?? "",
           dni: res.data.dni ?? "",
           id_zona_geografica_contratador: zonaId,
-          zona_geografica_obj: zonaRes.data,
+          zona_geografica_contratador: zonaRes.data,
         };
         setProfile(created);
         Alert.alert("Perfil creado correctamente");
@@ -137,7 +138,7 @@ const MiPerfilScreen = ({ navigation }) => {
       telefono_contratador: contratadorData.telefono_contratador ?? oldProfile.telefono_contratador,
       dni: contratadorData.dni ?? oldProfile.dni,
       id_zona_geografica_contratador: zonaData.id_zona_geografica ?? zonaData.id ?? oldProfile.id_zona_geografica_contratador,
-      zona_geografica_obj: zonaData,
+      zona_geografica_contratador: zonaData,
     };
   };
 
