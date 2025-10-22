@@ -12,6 +12,11 @@ const CrearTrabajoScreen = ({ navigation }) => {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [profesionId, setProfesionId] = useState("");
+
+  const [calleTrabajo, setCalleTrabajo] = useState("");
+  const [ciudadTrabajo, setCiudadTrabajo] = useState("");
+  const [provinciaTrabajo, setProvinciaTrabajo] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -38,6 +43,14 @@ const CrearTrabajoScreen = ({ navigation }) => {
       return;
     }
 
+    const zonaTrabajoVacia = !calleTrabajo && !ciudadTrabajo && !provinciaTrabajo;
+    const idZonaContratador = profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador?.id_zona_geografica;
+
+    if (zonaTrabajoVacia && !idZonaContratador) {
+       Alert.alert("Zona Geográfica Requerida", "Debes especificar la zona del trabajo o asegurarte de que tu perfil de contratador tenga una zona definida.");
+       return;
+    }
+
     setLoading(true);
     try {
       // Construyo payload según serializers.py / models.py que tienes en backend
@@ -54,10 +67,22 @@ const CrearTrabajoScreen = ({ navigation }) => {
         // otros campos que tu serializer acepte pueden agregarse
       };
 
-      // Solo agregar si tienen valor
-      if (profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador?.id_zona_geografica) {
+      /*if (profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador?.id_zona_geografica) {
         payload.id_zona_geografica_trabajo =
         profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador.id_zona_geografica;
+      }
+      */
+
+      if (!zonaTrabajoVacia) {
+        // Enviar datos de zona nueva para que el backend la busque/cree
+        payload.zona_geografica_trabajo_data = {
+          calle: calleTrabajo,
+          ciudad: ciudadTrabajo,
+          provincia: provinciaTrabajo,
+        };
+      } else if (idZonaContratador) {
+         // Usar la zona del contratador (se envía el ID directamente)
+         payload.id_zona_geografica_trabajo = idZonaContratador;
       }
 
       // Si no hay trabajador asignado todavía, no lo agregamos:
@@ -73,6 +98,9 @@ const CrearTrabajoScreen = ({ navigation }) => {
       setTitulo("");
       setDescripcion("");
       setProfesionId("");
+      setCalleTrabajo("");
+      setCiudadTrabajo("");
+      setProvinciaTrabajo("");
       // opcional: navegación a MisTrabajos
       navigation.navigate("Mis Trabajos");
     } catch (err) {
@@ -105,6 +133,18 @@ const CrearTrabajoScreen = ({ navigation }) => {
           ))}
         </select>
       </View>
+
+      {/* CAMPOS DE ZONA GEOGRAFICA DEL TRABAJO */}
+      <Text style={[styles.label, {marginTop: 20, fontWeight: 'bold'}]}>Zona Geográfica del Trabajo</Text>
+      <Text style={[styles.label, {fontSize: 12}]}>Dejar vacío para usar su dirección de perfíl</Text>
+      <Text style={styles.label}>Calle</Text>
+      <TextInput style={styles.input} value={calleTrabajo} onChangeText={setCalleTrabajo} placeholder="Ej: Av. Principal 123" />
+
+      <Text style={styles.label}>Ciudad</Text>
+      <TextInput style={styles.input} value={ciudadTrabajo} onChangeText={setCiudadTrabajo} placeholder="Ej: Morón" />
+
+      <Text style={styles.label}>Provincia</Text>
+      <TextInput style={styles.input} value={provinciaTrabajo} onChangeText={setProvinciaTrabajo} placeholder="Ej: Buenos Aires" />
 
       <View style={{ marginTop: 16 }}>
         <Button title={loading ? "Guardando..." : "Crear Trabajo"} color="#228B22" onPress={handleCrearTrabajo} disabled={loading} />
