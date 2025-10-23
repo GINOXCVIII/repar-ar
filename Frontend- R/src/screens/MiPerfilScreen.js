@@ -62,8 +62,6 @@ useEffect(() => {
           telefono_contratador: form.telefono_contratador,
           dni: form.dni,
         };
-        // Si backend espera id_zona_geografica_contratador como integer, deberíamos crear o actualizar zona aparte.
-        // Para simplicidad: si profile.zona_geografica_contratador tiene id -> PATCH zona, sino -> POST zona y usar id resultante.
         if (profile.zona_geografica_contratador?.id_zona_geografica) {
           // actualizar zona
           try {
@@ -186,9 +184,12 @@ useEffect(() => {
       </View>
 
       <View style={{ marginTop: 10 }}>
-        <Button title="Registrarme como Trabajador" color="#006400" onPress={handleConvertToWorker} />
+        <Button 
+          title="Registrarme como Trabajador" 
+          color="#006400" 
+          onPress={() => navigation.navigate('RegistroTrabajador')} 
+        />
       </View>
-
       <View style={{ marginTop: 10 }}>
         <Button title="Cerrar sesión" color="#B22222" onPress={async () => { await signOutUser(); navigation.navigate("Login"); }} />
       </View>

@@ -12,6 +12,8 @@ import HomeTrabajadorScreen from "../screens/Trabajador/HomeTrabajadorScreen";
 import CrearTrabajoScreen from "../screens/Contratador/CrearTrabajoScreen";
 import MisTrabajosScreen from "../screens/Contratador/MisTrabajosScreen";
 import MiPerfilScreen from "../screens/MiPerfilScreen";
+import RegistroTrabajadorScreen from "../screens/RegistroTrabajadorScreen"; 
+
 
 import { useAuth } from "../contexts/AuthProvider";
 
@@ -79,6 +81,15 @@ const AppNavigation = () => {
         ) : (
           <Stack.Screen name="ContratadorTabs" component={ContratadorTabs} />
         )}
+
+        <Stack.Screen 
+          name="RegistroTrabajador" 
+          component={RegistroTrabajadorScreen} 
+          options={{ 
+            headerShown: true, 
+            title: 'Registrar como Trabajador' 
+          }} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
