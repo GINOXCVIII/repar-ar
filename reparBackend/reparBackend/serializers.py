@@ -37,7 +37,8 @@ class ContratadorSerializer(serializers.ModelSerializer):
 
     zona_geografica_contratador = serializers.SerializerMethodField()
 
-    id_zona_geografica_contratador = serializers.IntegerField(write_only=True)
+    # id_zona_geografica_contratador = serializers.IntegerField(write_only=True)
+    id_zona_geografica_contratador = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
     def get_zona_geografica_contratador(self, obj):
         zona_geografica_contratador = obj.id_zona_geografica_contratador

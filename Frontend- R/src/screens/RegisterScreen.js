@@ -8,23 +8,25 @@ const RegisterScreen = ({ navigation }) => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // zona geográfica que pide el backend en la vista FirebaseRegisterView
-  const [calle, setCalle] = useState("");
-  const [ciudad, setCiudad] = useState("");
-  const [provincia, setProvincia] = useState("");
+
+  // const [calle, setCalle] = useState("");
+  // const [ciudad, setCiudad] = useState("");
+  // const [provincia, setProvincia] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!email || !password || !calle || !ciudad || !provincia) {
-      Alert.alert("Faltan datos", "Completá email, contraseña y la zona (calle, ciudad, provincia).");
+    // if (!email || !password || !calle || !ciudad || !provincia) {
+    if (!email || !password) {
+      // Alert.alert("Faltan datos", "Completá email, contraseña y la zona (calle, ciudad, provincia).");
+      Alert.alert("Faltan datos", "Completá email y contraseña.");
       return;
     }
     setLoading(true);
     try {
-      const zona = { calle, ciudad, provincia };
-      await signUp({ email: email.trim(), password, zona_geografica: zona });
+      // const zona = { calle, ciudad, provincia };
+      await signUp({ email: email.trim(), password });
       Alert.alert("Cuenta creada", "Usuario creado correctamente. Completá tu perfil si es necesario.");
-      // AppNavigation detectará el usuario y mostrará la pantalla correspondiente
+
     } catch (err) {
       console.error("Error register:", err.response?.data || err);
       const msg = err.response?.data ?? err.message ?? "Error al registrarse";
@@ -43,16 +45,6 @@ const RegisterScreen = ({ navigation }) => {
 
       <Text style={styles.label}>Contraseña</Text>
       <TextInput style={styles.input} secureTextEntry value={password} onChangeText={setPassword} />
-
-      <Text style={[styles.subtitle, { marginTop: 12 }]}>Zona geográfica (se creará en el backend)</Text>
-      <Text style={styles.label}>Calle</Text>
-      <TextInput style={styles.input} value={calle} onChangeText={setCalle} />
-
-      <Text style={styles.label}>Ciudad</Text>
-      <TextInput style={styles.input} value={ciudad} onChangeText={setCiudad} />
-
-      <Text style={styles.label}>Provincia</Text>
-      <TextInput style={styles.input} value={provincia} onChangeText={setProvincia} />
 
       <View style={{ marginTop: 16 }}>
         <Button title={loading ? "Creando..." : "Crear cuenta"} color="#228B22" onPress={handleRegister} disabled={loading} />

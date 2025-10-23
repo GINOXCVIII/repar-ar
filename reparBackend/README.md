@@ -1,4 +1,7 @@
-# Comandos de *manage.py-*
+# repar-AR - Backend
+Desarrollado con Django 4.2 en Python.
+
+## Comandos de *manage.py-*
 
 ### Modelos y tablas en la base de datos
 ~~~
@@ -12,6 +15,7 @@ python manage.py migrate
 ~~~
 
 Crea las tablas en la base de datos.
+Utilizar estos dos comandos para crear la base de datos SQL *repar_arDB* .
 
 ### Superuser
 ~~~
