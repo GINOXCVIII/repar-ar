@@ -136,10 +136,19 @@ class EstadoView(APIView):
 class ContratadorView(APIView):
     """ Gestiona el CRUD para Contratadores. """
     def get(self, request, id=None):
+        # Soporta /api/contratadores/?firebase_uid=XXXXX
+        firebase_uid = request.query_params.get('firebase_uid', None)
+
         if id:
             item = get_object_or_404(Contratador, pk=id)
             serializer = ContratadorSerializer(item)
             return Response(serializer.data)
+
+        if firebase_uid:
+            items = Contratador.objects.filter(uid_firebase=firebase_uid)
+            serializer = ContratadorSerializer(items, many=True)
+            return Response(serializer.data)
+
         items = Contratador.objects.all()
         serializer = ContratadorSerializer(items, many=True)
         return Response(serializer.data)
@@ -200,22 +209,37 @@ class TrabajadorView(APIView):
 class TrabajoView(APIView):
     """ Gestiona el CRUD para Trabajos. """
     def get(self, request, id=None):
+        # Si piden un id específico, devolvemos ese
         if id:
             item = get_object_or_404(Trabajo, pk=id)
             serializer = TrabajoSerializer(item)
             return Response(serializer.data)
-        items = Trabajo.objects.all()
+
+        # Soporta filtros:
+        # - ?id_contratador=NN   -> devuelve todos los trabajos de ese contratador
+        # - ?uid_firebase=XXX    -> busca el contratador por uid y devuelve sus trabajos
+        id_contratador = request.query_params.get('id_contratador', None)
+        uid_firebase = request.query_params.get('uid_firebase', None)
+
+        items = Trabajo.objects.all().order_by('-id_trabajo')
+
+        if id_contratador:
+            try:
+                items = items.filter(id_contratador_id=int(id_contratador))
+            except ValueError:
+                # si no es un entero, devolvemos vacio
+                items = Trabajo.objects.none()
+
+        elif uid_firebase:
+            # Buscar contratador por uid_firebase
+            contratador = Contratador.objects.filter(uid_firebase=uid_firebase).first()
+            if contratador:
+                items = items.filter(id_contratador_id=contratador.id_contratador)
+            else:
+                items = Trabajo.objects.none()
+
         serializer = TrabajoSerializer(items, many=True)
         return Response(serializer.data)
-
-    """
-    def post(self, request):
-        serializer = TrabajoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    """
 
     @transaction.atomic
     def post(self, request):
@@ -511,7 +535,3 @@ class FirebaseRegisterView(APIView):
             "contratador": ContratadorSerializer(contratador).data,
             "zona_geografica": ZonaGeograficaSerializer(zona).data
         }, status=status.HTTP_201_CREATED)
-
-
-
-

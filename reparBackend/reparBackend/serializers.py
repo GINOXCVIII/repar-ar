@@ -45,12 +45,18 @@ class ContratadorSerializer(serializers.ModelSerializer):
         return ZonaGeograficaSerializer(zona_geografica_contratador).data
 
     def create(self, validated_data):
-        id_zona_geografica_contratador = validated_data.pop('id_zona_geografica_contratador')
+        id_zona_geografica_contratador = validated_data.pop('id_zona_geografica_contratador', None)
         uid_firebase = validated_data.pop('uid_firebase', None) 
 
+        # Crear usando sufijos _id en FKs para evitar asignaciones incorrectas
+        create_kwargs = {}
+        if id_zona_geografica_contratador is not None:
+            create_kwargs['id_zona_geografica_contratador_id'] = id_zona_geografica_contratador
+        if uid_firebase is not None:
+            create_kwargs['uid_firebase'] = uid_firebase
+
         contratador = Contratador.objects.create(
-            id_zona_geografica_contratador_id = id_zona_geografica_contratador,
-            uid_firebase = uid_firebase,
+            **create_kwargs,
             **validated_data
         )
         return contratador
