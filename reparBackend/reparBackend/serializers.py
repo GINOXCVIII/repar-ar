@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Fri Sep 12 17:18:34 2025
 
@@ -33,17 +31,46 @@ class EstadoSerializer(serializers.ModelSerializer):
 class ContratadorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contratador
-        # fields = '__all__'
+        # fields = 'all'
         fields = ('id_contratador', 'id_zona_geografica_contratador', 'nombre', 'apellido', 
                   'email_contratador', 'telefono_contratador', 'dni', 'uid_firebase', 'zona_geografica_contratador')
-        
+
     zona_geografica_contratador = serializers.SerializerMethodField()
-        
+
     id_zona_geografica_contratador = serializers.IntegerField(write_only=True)
-        
+
     def get_zona_geografica_contratador(self, obj):
         zona_geografica_contratador = obj.id_zona_geografica_contratador
         return ZonaGeograficaSerializer(zona_geografica_contratador).data
+
+    def create(self, validated_data):
+        id_zona_geografica_contratador = validated_data.pop('id_zona_geografica_contratador')
+        uid_firebase = validated_data.pop('uid_firebase', None) 
+
+        contratador = Contratador.objects.create(
+            id_zona_geografica_contratador_id = id_zona_geografica_contratador,
+            uid_firebase = uid_firebase,
+            **validated_data
+        )
+        return contratador
+
+    def update(self, instance, validated_data):
+        id_zona_geografica_contratador = validated_data.pop('id_zona_geografica_contratador', None)
+        uid_firebase = validated_data.pop('uid_firebase', None) 
+
+        # Actualiza todos los campos
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if id_zona_geografica_contratador is not None:
+            instance.id_zona_geografica_contratador_id = id_zona_geografica_contratador
+
+        if uid_firebase is not None:
+            instance.uid_firebase = uid_firebase
+
+        instance.save()
+
+        return instance
         
 
 class TrabajadorSerializer(serializers.ModelSerializer):
@@ -74,25 +101,28 @@ class TrabajadorSerializer(serializers.ModelSerializer):
         id_zona_geografica_trabajador = validated_data.pop('id_zona_geografica_trabajador')
         
         trabajador = Trabajador.objects.create(
-            id_contratador = id_contratador,
-            id_zona_geografica_trabajador = id_zona_geografica_trabajador,
+            # CAMBIO CLAVE: Se asigna el ID al campo FK con el sufijo _id
+            id_contratador_id = id_contratador,
+            id_zona_geografica_trabajador_id = id_zona_geografica_trabajador,
             **validated_data
             )
             
         return trabajador
     
     def update(self, instance, validated_data):
-        id_contratador = validated_data.pop('id_contratador')
-        id_zona_geografica_trabajador = validated_data.pop('id_zona_geografica_trabajador')
+        id_contratador = validated_data.pop('id_contratador', None)
+        id_zona_geografica_trabajador = validated_data.pop('id_zona_geografica_trabajador', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
             
         if id_contratador is not None:
-            instance.id_contratador = id_contratador
+            # CAMBIO CLAVE: Se asigna el ID al campo FK con el sufijo _id
+            instance.id_contratador_id = id_contratador
             
         if id_zona_geografica_trabajador is not None:
-            instance.id_zona_geografica_trabajador = id_zona_geografica_trabajador
+            # CAMBIO CLAVE: Se asigna el ID al campo FK con el sufijo _id
+            instance.id_zona_geografica_trabajador_id = id_zona_geografica_trabajador
             
         instance.save()
         
@@ -125,25 +155,25 @@ class TrabajadoresProfesionSerializer(serializers.ModelSerializer):
         id_profesion = validated_data.pop('id_profesion')
         
         trabajador_profesion = TrabajadoresProfesion.objects.create(
-            id_trabajador = id_trabajador,
-            id_profesion = id_profesion,
+            id_trabajador_id = id_trabajador,
+            id_profesion_id = id_profesion,
             **validated_data
             )
             
         return trabajador_profesion
     
     def update(self, instance, validated_data):
-        id_trabajador = validated_data.pop('id_trabajador')
-        id_profesion = validated_data.pop('id_profesion')
+        id_trabajador = validated_data.pop('id_trabajador', None)
+        id_profesion = validated_data.pop('id_profesion', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
             
         if id_trabajador is not None:
-            instance.id_trabajador = id_trabajador
+            instance.id_trabajador_id = id_trabajador
             
         if id_profesion is not None:
-            instance.id_profesion = id_profesion
+            instance.id_profesion_id = id_profesion
             
         instance.save()
         
@@ -164,7 +194,6 @@ class TrabajoSerializer(serializers.ModelSerializer):
     estado = serializers.SerializerMethodField()
         
     id_contratador = serializers.IntegerField(write_only=True)
-    # id_trabajador = serializers.IntegerField(write_only=True)
     id_trabajador = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     id_profesion_requerida = serializers.IntegerField(write_only=True)
     id_zona_geografica_trabajo = serializers.IntegerField(write_only=True)
@@ -191,17 +220,13 @@ class TrabajoSerializer(serializers.ModelSerializer):
         return EstadoSerializer(estado).data
 
     def create(self, validated_data):
-        # id_contratador = validated_data.pop('id_contratador')
         id_contratador = validated_data.pop('id_contratador')
-        # id_trabajador = validated_data.pop('id_trabajador')
         id_profesion_requerida = validated_data.pop('id_profesion_requerida')
         id_zona_geografica_trabajo = validated_data.pop('id_zona_geografica_trabajo')
         id_estado = validated_data.pop('id_estado')
         
         trabajo = Trabajo.objects.create(
-            # Aplico convesiones de acceso a FK de Django ORM
             id_contratador_id = id_contratador,
-            # id_trabajador = id_trabajador,
             id_profesion_requerida_id = id_profesion_requerida,
             id_zona_geografica_trabajo_id = id_zona_geografica_trabajo, 
             id_estado_id = id_estado,
@@ -211,11 +236,11 @@ class TrabajoSerializer(serializers.ModelSerializer):
         return trabajo
     
     def update(self, instance, validated_data):
-        id_contratador = validated_data.pop('id_contratador')
-        id_trabajador = validated_data.pop('id_trabajador')
-        id_profesion_requerida = validated_data.pop('id_profesion_requerida')
-        id_zona_geografica_trabajo = validated_data.pop('id_zona_geografica_trabajo')
-        id_estado = validated_data.pop('id_estado')
+        id_contratador = validated_data.pop('id_contratador', None)
+        id_trabajador = validated_data.pop('id_trabajador', None)
+        id_profesion_requerida = validated_data.pop('id_profesion_requerida', None)
+        id_zona_geografica_trabajo = validated_data.pop('id_zona_geografica_trabajo', None)
+        id_estado = validated_data.pop('id_estado', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -237,7 +262,7 @@ class TrabajoSerializer(serializers.ModelSerializer):
             
         instance.save()
         
-        return instance    
+        return instance     
     
 
 class PostulacionSerializer(serializers.ModelSerializer):
@@ -267,25 +292,25 @@ class PostulacionSerializer(serializers.ModelSerializer):
         id_trabajador = validated_data.pop('id_trabajador')
         
         postulacion = Postulacion.objects.create(
-            id_trabajo = id_trabajo,
-            id_trabajador = id_trabajador,
+            id_trabajo_id = id_trabajo,
+            id_trabajador_id = id_trabajador,
             **validated_data
             )
             
         return postulacion
     
     def update(self, instance, validated_data):
-        id_trabajo = validated_data.pop('id_trabajo')
-        id_trabajador = validated_data.pop('id_trabajador')
+        id_trabajo = validated_data.pop('id_trabajo', None)
+        id_trabajador = validated_data.pop('id_trabajador', None)
         
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
             
         if id_trabajo is not None:
-            instance.id_trabajo = id_trabajo
+            instance.id_trabajo_id = id_trabajo
             
         if id_trabajador is not None:
-            instance.id_trabajador = id_trabajador
+            instance.id_trabajador_id = id_trabajador
             
         instance.save()
         
@@ -308,16 +333,3 @@ class CalificacionContratadorSerializer(serializers.ModelSerializer):
     class Meta:
         model = CalificacionContratador
         fields = '__all__'
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
