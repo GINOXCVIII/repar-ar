@@ -50,7 +50,7 @@ const CrearTrabajoScreen = ({ navigation }) => {
        Alert.alert("Zona Geográfica Requerida", "Debes especificar la zona del trabajo o asegurarte de que tu perfil de contratador tenga una zona definida.");
        return;
     }
-
+    console.log("Titulo cargado: ", titulo)
     setLoading(true);
     try {
       // Construyo payload según serializers.py / models.py que tienes en backend
@@ -60,6 +60,7 @@ const CrearTrabajoScreen = ({ navigation }) => {
         id_profesion_requerida: profesionId,
         id_zona_geografica_trabajo: profile.id_zona_geografica_contratador ?? profile.zona_geografica_contratador?.id_zona_geografica ?? null,
         id_estado: 1, // asumimos estado por defecto (1). Ajustar si tu backend requiere otro id.
+        titulo: titulo,
         descripcion: descripcion,
         fecha_creacion: new Date().toISOString(),
         // fecha_inicio: null,

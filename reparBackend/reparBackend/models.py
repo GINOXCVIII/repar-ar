@@ -74,6 +74,7 @@ class Trabajo(models.Model):
     id_profesion_requerida = models.ForeignKey(Profesion, on_delete=models.PROTECT, db_column='id_profesion_requerida')
     id_zona_geografica_trabajo = models.ForeignKey(ZonaGeografica, on_delete=models.SET_NULL, null=True, db_column='id_zona_geografica_trabajo')
     id_estado = models.ForeignKey(Estado, on_delete=models.PROTECT, db_column='id_estado')
+    titulo = models.CharField(default="Trabajo sin titulo asignado", max_length=50) # Campo nuevo
     descripcion = models.CharField(max_length=500)
     fecha_creacion = models.DateTimeField()
     fecha_inicio = models.DateTimeField(blank=True, null=True) # Estarán en blanco inicialmente

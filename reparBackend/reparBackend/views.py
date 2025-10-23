@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404
 from firebase_admin import auth as firebase_auth
 from django.db import transaction
 
-# Importamos todos los modelos y serializadores necesarios
 from .models import (
     ZonaGeografica,
     Profesion,

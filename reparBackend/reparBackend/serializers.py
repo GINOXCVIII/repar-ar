@@ -191,7 +191,7 @@ class TrabajoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trabajo
         fields = ('id_trabajo', 'id_contratador', 'id_trabajador', 'id_profesion_requerida', 'id_zona_geografica_trabajo', 'id_estado',
-                  'descripcion', 'fecha_creacion', 'fecha_inicio', 'fecha_fin',
+                  'titulo', 'descripcion', 'fecha_creacion', 'fecha_inicio', 'fecha_fin',
                   'contratador', 'trabajador', 'profesion_requerida', 'zona_geografica_trabajo', 'estado')
         
     contratador = serializers.SerializerMethodField()
