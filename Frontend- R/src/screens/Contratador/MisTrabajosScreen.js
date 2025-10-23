@@ -146,7 +146,7 @@ export default function MisTrabajosScreen() {
     const profesion = item.profesion_requerida?.nombre_profesion ?? item.profesion_requerida?.nombre ?? "No especificada";
     const ciudad = item.zona_geografica_trabajo?.ciudad ?? item.zona_geografica_trabajo?.nombre ?? "-";
     const provincia = item.zona_geografica_trabajo?.provincia ?? "-";
-    const estado = item.estado?.nombre_estado ?? "-";
+    const estado = item.estado?.descripcion ?? "-";
 
     return (
       <View style={styles.card}>
