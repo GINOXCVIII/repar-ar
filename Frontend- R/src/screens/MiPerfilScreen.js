@@ -160,6 +160,53 @@ useEffect(() => {
       <Text style={styles.label}>Apellido</Text>
       <TextInput style={styles.input} value={form.apellido} onChangeText={(v) => handleChange("apellido", v)} />
 
+      <Text style={styles.label}>Email de contacto</Text>
+      <TextInput style={styles.input} value={form.email_contratador} onChangeText={(v) => handleChange("email_contratador", v)} />
+
+      <Text style={styles.label}>Teléfono</Text>
+      <TextInput style={styles.input} value={form.telefono_contratador} onChangeText={(v) => handleChange("telefono_contratador", v)} keyboardType="phone-pad" />
+
+      <Text style={styles.label}>DNI</Text>
+      <TextInput style={[styles.input, { backgroundColor: "#eee" }]} value={form.dni} editable={false} onChangeText={(v) => handleChange("dni", v)} keyboardType="numeric" />
+
+      <Text style={[styles.subtitle, { marginTop: 12 }]}>Dirección (zona geográfica)</Text>
+      <Text style={styles.label}>Calle</Text>
+      <TextInput style={styles.input} value={form.calle} onChangeText={(v) => handleChange("calle", v)} />
+
+      <Text style={styles.label}>Ciudad</Text>
+      <TextInput style={styles.input} value={form.ciudad} onChangeText={(v) => handleChange("ciudad", v)} />
+
+      <Text style={styles.label}>Provincia</Text>
+      <TextInput style={styles.input} value={form.provincia} onChangeText={(v) => handleChange("provincia", v)} />
+
+      <View style={{ marginTop: 14 }}>
+        {saving ? <ActivityIndicator /> : <Button title="Guardar perfil" color="#228B22" onPress={saveProfile} />}
+      </View>
+
+      <View style={{ marginTop: 10 }}>
+        <Button 
+          title="Registrarme como Trabajador" 
+          color="#006400" 
+          onPress={() => navigation.navigate('RegistroTrabajador')} 
+        />
+      </View>
+      <View style={{ marginTop: 10 }}>
+        <Button title="Cerrar sesión" color="#B22222" onPress={async () => { await signOutUser(); navigation.navigate("Login"); }} />
+      </View>
+    </ScrollView>
+  );
+};
+/*
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Mi Perfil</Text>
+
+      <Text style={styles.label}>Nombre</Text>
+      <TextInput style={styles.input} value={form.nombre} onChangeText={(v) => handleChange("nombre", v)} />
+
+      <Text style={styles.label}>Apellido</Text>
+      <TextInput style={styles.input} value={form.apellido} onChangeText={(v) => handleChange("apellido", v)} />
+
       <Text style={styles.label}>Email</Text>
       <TextInput style={[styles.input, { backgroundColor: "#eee" }]} value={form.email_contratador} editable={false} />
 
@@ -196,7 +243,7 @@ useEffect(() => {
     </ScrollView>
   );
 };
-
+*/
 const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: "#fff", height: "100%" },
   title: { fontSize: 22, fontWeight: "700", color: "#228B22", textAlign: "center", marginBottom: 12 },
