@@ -12,15 +12,12 @@ import HomeTrabajadorScreen from "../screens/Trabajador/HomeTrabajadorScreen";
 import CrearTrabajoScreen from "../screens/Contratador/CrearTrabajoScreen";
 import MisTrabajosScreen from "../screens/Contratador/MisTrabajosScreen";
 import MiPerfilScreen from "../screens/MiPerfilScreen";
-import ChatScreen from "../screens/ChatScreen";
- // Asegurate que este sea el path correcto
 
 import { useAuth } from "../contexts/AuthProvider";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// --- Tabs para Contratador ---
 const ContratadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -32,7 +29,6 @@ const ContratadorTabs = () => (
         if (route.name === "Inicio") iconName = "home-outline";
         else if (route.name === "Nuevo Trabajo") iconName = "add-circle-outline";
         else if (route.name === "Mis Trabajos") iconName = "briefcase-outline";
-        else if (route.name === "Chat") iconName = "chatbubble-ellipses-outline";
         else if (route.name === "Perfil") iconName = "person-outline";
         return <Ionicons name={iconName} size={size} color={color} />;
       },
@@ -41,12 +37,11 @@ const ContratadorTabs = () => (
     <Tab.Screen name="Inicio" component={HomeContratadorScreen} />
     <Tab.Screen name="Nuevo Trabajo" component={CrearTrabajoScreen} />
     <Tab.Screen name="Mis Trabajos" component={MisTrabajosScreen} />
-    <Tab.Screen name="Chat" component={ChatScreen} />
     <Tab.Screen name="Perfil" component={MiPerfilScreen} />
   </Tab.Navigator>
 );
 
-// --- Tabs para Trabajador ---
+//  Trabajador
 const TrabajadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -56,14 +51,12 @@ const TrabajadorTabs = () => (
       tabBarIcon: ({ color, size }) => {
         let iconName;
         if (route.name === "Inicio") iconName = "home-outline";
-        else if (route.name === "Chat") iconName = "chatbubble-ellipses-outline";
         else if (route.name === "Perfil") iconName = "person-outline";
         return <Ionicons name={iconName} size={size} color={color} />;
       },
     })}
   >
     <Tab.Screen name="Inicio" component={HomeTrabajadorScreen} />
-    <Tab.Screen name="Chat" component={ChatScreen} />
     <Tab.Screen name="Perfil" component={MiPerfilScreen} />
   </Tab.Navigator>
 );
@@ -71,7 +64,7 @@ const TrabajadorTabs = () => (
 const AppNavigation = () => {
   const { firebaseUser, loading, roleActive } = useAuth();
 
-  if (loading) return null; // Podés poner un SplashScreen acá si querés
+  if (loading) return null; 
 
   return (
     <NavigationContainer>
