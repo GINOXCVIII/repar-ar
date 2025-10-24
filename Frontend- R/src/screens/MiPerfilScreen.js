@@ -145,7 +145,7 @@ useEffect(() => {
       <TextInput style={styles.input} value={form.telefono_contratador} onChangeText={(v) => handleChange("telefono_contratador", v)} keyboardType="phone-pad" />
 
       <Text style={styles.label}>DNI</Text>
-      <TextInput style={[styles.input, { backgroundColor: "#eee" }]} value={form.dni} editable={false} onChangeText={(v) => handleChange("dni", v)} keyboardType="numeric" />
+      <TextInput style={[styles.input, { backgroundColor: form.dni ? "#eee" : "#fff" }]} value={form.dni?.toString() ?? "" } onChangeText={(v) => handleChange("dni", v)} keyboardType="numeric" />
 
       <Text style={[styles.subtitle, { marginTop: 12 }]}>Dirección (zona geográfica)</Text>
       <Text style={styles.label}>Calle</Text>
