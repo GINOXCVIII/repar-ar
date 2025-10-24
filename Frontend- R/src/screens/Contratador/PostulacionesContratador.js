@@ -1,4 +1,3 @@
-// src/screens/Contratador/PostulacionesContratador.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -41,29 +40,30 @@ export default function PostulacionesContratador({ route, navigation }) {
   const fetchPostulantes = async () => {
     setLoading(true);
     try {
-      console.log("cual es el id del trabajo que voy a usar?: ", trabajoId)
       const res = await axios.get(`${BASE_URL}/postulaciones/`, {
         params: { id_trabajo: trabajoId },
       });
       const postulaciones = Array.isArray(res.data) ? res.data : [];
 
-      const idsTrabajadores = Array.from(new Set(postulaciones.map((p) => p.trabajador.id_trabajador)));
-      console.log("Shioriko: ", idsTrabajadores)
-      
+      const idsTrabajadores = Array.from(
+        new Set(postulaciones.map((p) => p.trabajador.id_trabajador))
+      );
+
       const detallesPromises = idsTrabajadores.map(async (id_trabajador) => {
         let trabajadorData = null;
         try {
           const tRes = await axios.get(`${BASE_URL}/trabajadores/${id_trabajador}/`);
           trabajadorData = tRes.data;
         } catch (err) {
-          console.warn("No se pudo obtener trabajador", id_trabajador, err.response?.data || err);
+          console.warn(
+            "No se pudo obtener trabajador",
+            id_trabajador,
+            err.response?.data || err
+          );
         }
-
-        console.log("que poronga es esto: ", trabajadorData)
 
         let califs = [];
         try {
-          console.log("SUNNY: ", trabajadorData.id_trabajador)
           const cRes = await axios.get(`${BASE_URL}/calificaciones/calificaciones-trabajadores/`, {
             params: { id_trabajador: trabajadorData.id_trabajador },
           });
@@ -74,14 +74,13 @@ export default function PostulacionesContratador({ route, navigation }) {
 
         const comentarios = califs.map((c) => c.comentario).filter(Boolean);
         const numeros = califs.map((c) => Number(c.calificacion)).filter((n) => !isNaN(n));
-        const promedio = numeros.length ? numeros.reduce((a, b) => a + b, 0) / numeros.length : null;
-
-        console.log("goku dice: ", numeros, promedio)
+        const promedio =
+          numeros.length > 0 ? numeros.reduce((a, b) => a + b, 0) / numeros.length : null;
 
         return {
           id_trabajador,
-          nombre: trabajadorData?.contratador.nombre ?? "",
-          apellido: trabajadorData?.contratador.apellido ?? "",
+          nombre: trabajadorData?.contratador?.nombre ?? "",
+          apellido: trabajadorData?.contratador?.apellido ?? "",
           promedio,
           comentarios,
         };
@@ -108,12 +107,18 @@ export default function PostulacionesContratador({ route, navigation }) {
     setConfirmModalVisible(true);
   };
 
+  // ✅ Actualizado: ahora cambia también el estado del trabajo a 3
   const confirmChooseTrabajador = async () => {
     if (!chosenTrabajador) return;
     setProcessingChoice(true);
     try {
-      const payload = { id_trabajador: chosenTrabajador.id_trabajador };
+      const payload = {
+        id_trabajador: chosenTrabajador.id_trabajador,
+        id_estado: 3, // nuevo estado al confirmar trabajador
+      };
+
       await axios.patch(`${BASE_URL}/trabajos/${trabajoId}/`, payload);
+
       Alert.alert("Confirmado", "El trabajador fue seleccionado correctamente.");
       setConfirmModalVisible(false);
       navigation.goBack();
@@ -128,17 +133,27 @@ export default function PostulacionesContratador({ route, navigation }) {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={styles.title}>{ item.apellido + ", " + item.nombre || "Sin apellido"}</Text>
+        <Text style={styles.title}>
+          {item.apellido + ", " + item.nombre || "Sin apellido"}
+        </Text>
         <Ionicons name="person-circle-outline" size={28} color="#2d6a4f" />
       </View>
       <Text style={styles.subtitle}>
-        {item.promedio !== null ? `Promedio: ${item.promedio.toFixed(1)}` : "Sin calificaciones"}
+        {item.promedio !== null
+          ? `Promedio: ${item.promedio.toFixed(1)}`
+          : "Sin calificaciones"}
       </Text>
       <View style={styles.row}>
-        <TouchableOpacity style={styles.linkButton} onPress={() => openComments(item.comentarios)}>
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={() => openComments(item.comentarios)}
+        >
           <Text style={styles.linkText}>Ver comentarios</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.chooseButton} onPress={() => openConfirm(item)}>
+        <TouchableOpacity
+          style={styles.chooseButton}
+          onPress={() => openConfirm(item)}
+        >
           <Text style={styles.chooseText}>ELEGIR TRABAJADOR</Text>
         </TouchableOpacity>
       </View>
@@ -186,7 +201,10 @@ export default function PostulacionesContratador({ route, navigation }) {
                 ))
               )}
             </ScrollView>
-            <Pressable style={styles.modalClose} onPress={() => setCommentsModalVisible(false)}>
+            <Pressable
+              style={styles.modalClose}
+              onPress={() => setCommentsModalVisible(false)}
+            >
               <Text style={{ color: "#fff" }}>Cerrar</Text>
             </Pressable>
           </View>
@@ -200,7 +218,10 @@ export default function PostulacionesContratador({ route, navigation }) {
             <Text style={styles.confirmTitle}>¿Confirmar este trabajador?</Text>
             <View style={{ flexDirection: "row", marginTop: 20 }}>
               <TouchableOpacity
-                style={[styles.btnConfirm, { backgroundColor: "#e11d48", marginRight: 8 }]}
+                style={[
+                  styles.btnConfirm,
+                  { backgroundColor: "#e11d48", marginRight: 8 },
+                ]}
                 onPress={() => setConfirmModalVisible(false)}
               >
                 <Text style={{ color: "#fff" }}>Cancelar</Text>
@@ -236,7 +257,6 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { color: "#14532d", fontSize: 16, fontWeight: "700" },
   subtitle: { color: "#2d6a4f", fontSize: 13, marginTop: 6, fontWeight: "600" },
-  description: { color: "#264a3b", fontSize: 13, marginTop: 6 },
   row: { flexDirection: "row", justifyContent: "space-between", marginTop: 12, alignItems: "center" },
   linkButton: { paddingVertical: 6, paddingHorizontal: 10 },
   linkText: { color: "#2d6a4f", fontWeight: "700" },

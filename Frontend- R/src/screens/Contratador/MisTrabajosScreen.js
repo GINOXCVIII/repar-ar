@@ -1,7 +1,4 @@
 // src/screens/Contratador/MisTrabajosScreen.js
-// Muestra TODOS los trabajos cuyo campo id_contratador coincide con el id_contratador
-// del contratador asociado al firebase UID del usuario logueado.
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -28,6 +25,7 @@ export default function MisTrabajosScreen() {
     if (isFocused) {
       cargarMisTrabajos();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused, firebaseUser]);
 
   const cargarMisTrabajos = async () => {
@@ -55,7 +53,7 @@ export default function MisTrabajosScreen() {
       const miContratador = contratadores[0];
       setContratador(miContratador);
 
-      // 2) Extraer id_contratador (campo exacto del backend)
+      // 2) Extraer id_contratador
       const idContratador = miContratador.id_contratador ?? miContratador.id ?? null;
 
       if (!idContratador && idContratador !== 0) {
@@ -65,7 +63,7 @@ export default function MisTrabajosScreen() {
         return;
       }
 
-      // 3) Intentar pedir trabajos filtrados por backend (si soporta query param)
+      // 3) Intentar pedir trabajos filtrados por backend
       try {
         const respTrabajosFiltro = await api.get(`/trabajos/?id_contratador=${idContratador}`);
         const trabajosFiltradosPorBackend = Array.isArray(respTrabajosFiltro.data)
@@ -87,13 +85,11 @@ export default function MisTrabajosScreen() {
         );
       }
 
-      // 4) Fallback: traer todos los trabajos y filtrar localmente
+      // 4) Fallback local
       try {
         const respAll = await api.get("/trabajos/");
         const todos = Array.isArray(respAll.data) ? respAll.data : [];
-        const trabajosFiltrados = todos.filter((t) =>
-          compararIdContratador(t, idContratador)
-        );
+        const trabajosFiltrados = todos.filter((t) => compararIdContratador(t, idContratador));
         setTrabajos(trabajosFiltrados);
       } catch (errAll) {
         console.error(
@@ -117,35 +113,21 @@ export default function MisTrabajosScreen() {
     if (trabajo.id_contratador !== undefined && trabajo.id_contratador !== null) {
       return String(trabajo.id_contratador) === String(idContratadorEsperado);
     }
-    if (
-      trabajo.contratador &&
-      (trabajo.contratador.id_contratador !== undefined || trabajo.contratador.id !== undefined)
-    ) {
+    if (trabajo.contratador && (trabajo.contratador.id_contratador !== undefined || trabajo.contratador.id !== undefined)) {
       const nested = trabajo.contratador.id_contratador ?? trabajo.contratador.id;
       return String(nested) === String(idContratadorEsperado);
     }
     return false;
   };
 
-  const handleVerPostulantes = (trabajo) => {
-    const id = trabajo.id_trabajo ?? trabajo.id;
-    if (!id) {
-      Alert.alert("Error", "No se pudo determinar el ID del trabajo.");
-      return;
-    }
-    navigation.navigate("PostulacionesContratador", { trabajoId: id });
-  };
-
   const renderItem = ({ item }) => {
     const titulo = item.titulo ?? item.title ?? "Sin título";
     const descripcion = item.descripcion ?? "";
-    const profesion =
-      item.profesion_requerida?.nombre_profesion ??
-      item.profesion_requerida?.nombre ??
-      "No especificada";
+    const profesion = item.profesion_requerida?.nombre_profesion ?? item.profesion_requerida?.nombre ?? "No especificada";
     const ciudad = item.zona_geografica_trabajo?.ciudad ?? item.zona_geografica_trabajo?.nombre ?? "-";
     const provincia = item.zona_geografica_trabajo?.provincia ?? "-";
     const estado = item.estado?.descripcion ?? "-";
+    const idEstado = item.id_estado ?? item.estado?.id_estado ?? null;
 
     return (
       <View style={styles.card}>
@@ -154,17 +136,22 @@ export default function MisTrabajosScreen() {
 
         <View style={styles.row}>
           <Text style={styles.info}>{profesion}</Text>
-          <Text style={styles.info}>
-            {ciudad}
-            {provincia ? `, ${provincia}` : ""}
-          </Text>
+          <Text style={styles.info}>{ciudad}{provincia ? `, ${provincia}` : ""}</Text>
         </View>
 
         <View style={styles.rowBottom}>
           <Text style={styles.estado}>Estado: {estado}</Text>
-          <TouchableOpacity onPress={() => handleVerPostulantes(item)}>
-            <Text style={styles.link}>Ver postulantes</Text>
-          </TouchableOpacity>
+
+          {/* ✅ solo mostrar el botón si el estado es 1 o 2 */}
+          {(idEstado === 1 || idEstado === 2) && (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("PostulacionesContratador", { trabajoId: item.id_trabajo })
+              }
+            >
+              <Text style={styles.link}>Ver postulantes</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -178,9 +165,7 @@ export default function MisTrabajosScreen() {
         <ActivityIndicator size="large" color="#0b9d57" style={{ marginTop: 20 }} />
       ) : trabajos.length === 0 ? (
         <View style={{ padding: 20 }}>
-          <Text style={{ textAlign: "center", color: "#666" }}>
-            No tenés trabajos publicados todavía.
-          </Text>
+          <Text style={{ textAlign: "center", color: "#666" }}>No tenés trabajos publicados todavía.</Text>
         </View>
       ) : (
         <FlatList
@@ -219,12 +204,7 @@ const styles = StyleSheet.create({
   descripcion: { marginTop: 8, color: "#333" },
   row: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   info: { color: "#0b9d57", fontWeight: "600" },
-  rowBottom: {
-    marginTop: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+  rowBottom: { marginTop: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   estado: { color: "#006400", fontWeight: "600" },
   link: { color: "#0b9d57", fontWeight: "700" },
 });
