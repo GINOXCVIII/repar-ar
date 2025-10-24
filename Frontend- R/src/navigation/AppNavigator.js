@@ -1,4 +1,3 @@
-// src/navigation/AppNavigation.js
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -13,16 +12,14 @@ import CrearTrabajoScreen from "../screens/Contratador/CrearTrabajoScreen";
 import MisTrabajosScreen from "../screens/Contratador/MisTrabajosScreen";
 import MiPerfilScreen from "../screens/MiPerfilScreen";
 import RegistroTrabajadorScreen from "../screens/RegistroTrabajadorScreen";
-import PostulacionesContratador from "../screens/Contratador/PostulacionesContratador"; // 🆕 nueva pantalla
+import PostulacionesContratador from "../screens/Contratador/PostulacionesContratador";
+import MisPostulacionesScreen from "../screens/MyPostulationsScreen";
 
 import { useAuth } from "../contexts/AuthProvider";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-/* =============================
-   TABS DEL CONTRATADOR
-============================= */
 const ContratadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -46,10 +43,6 @@ const ContratadorTabs = () => (
   </Tab.Navigator>
 );
 
-/* =============================
-   STACK CONTRATADOR COMPLETO
-   (Incluye las tabs + pantallas extra)
-============================= */
 const ContratadorStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="ContratadorTabs" component={ContratadorTabs} />
@@ -64,9 +57,6 @@ const ContratadorStack = () => (
   </Stack.Navigator>
 );
 
-/* =============================
-   TABS DEL TRABAJADOR
-============================= */
 const TrabajadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -76,21 +66,20 @@ const TrabajadorTabs = () => (
       tabBarIcon: ({ color, size }) => {
         let iconName;
         if (route.name === "Inicio") iconName = "home-outline";
+        else if (route.name === "Mis Postulaciones") iconName = "list-outline";
         else if (route.name === "Perfil") iconName = "person-outline";
         return <Ionicons name={iconName} size={size} color={color} />;
       },
     })}
   >
     <Tab.Screen name="Inicio" component={HomeTrabajadorScreen} />
+    <Tab.Screen name="Mis Postulaciones" component={MisPostulacionesScreen} />
     <Tab.Screen name="Perfil" component={MiPerfilScreen} />
   </Tab.Navigator>
 );
 
-/* =============================
-   APP NAVIGATION PRINCIPAL
-============================= */
 const AppNavigation = () => {
-  const { firebaseUser, loading, userRole } = useAuth();
+  const { firebaseUser, loading, roleActive } = useAuth();
 
   if (loading) return null;
 
@@ -102,12 +91,11 @@ const AppNavigation = () => {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
-        ) : userRole === "trabajador" ? (
+        ) : roleActive === "trabajador" ? (
           <Stack.Screen name="TrabajadorTabs" component={TrabajadorTabs} />
         ) : (
           <Stack.Screen name="ContratadorStack" component={ContratadorStack} />
         )}
-
         <Stack.Screen
           name="RegistroTrabajador"
           component={RegistroTrabajadorScreen}
@@ -122,3 +110,4 @@ const AppNavigation = () => {
 };
 
 export default AppNavigation;
+

@@ -1,55 +1,111 @@
-// src/screens/Trabajador/HomeTrabajadorScreen.js
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import api from "../../api/api";
-import { useAuth } from "../../contexts/AuthProvider";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 
 export default function HomeTrabajadorScreen() {
-  const { profile } = useAuth();
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const isFocused = useIsFocused();
-  const nav = useNavigation();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const isFocused = useIsFocused();
+  const nav = useNavigation();
 
-  useEffect(() => {
-    if (!isFocused) return;
-    loadJobs();
-  }, [isFocused]);
+  useEffect(() => {
+    if (!isFocused) return;
+    loadOpenJobs();
+  }, [isFocused]);
 
-  const loadJobs = async () => {
-    setLoading(true);
-    try {
-      const zona = profile?.trabajador?.id_zona_geografica_trabajador;
-      // si profile trae profesiones múltiples, se puede iterar; acá tomo la primera si existe
-      const profesion = profile?.trabajador_profesion?.id_profesion || null;
-      // Llamada con filtros: ?zona=&profesion=
-      const resp = await api.get(`/trabajos/?zona=${zona || ""}&profesion=${profesion || ""}`);
-      setJobs(resp.data || []);
-    } catch (e) {
-      console.error(e);
-      setJobs([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadOpenJobs = async () => {
+    setLoading(true);
+    try {
+      const resp = await api.get(`/trabajos/?id_estado=1`);
+      setJobs(resp.data || []);
+    } catch (e) {
+      console.error("Error cargando trabajos abiertos:", e);
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const render = ({ item }) => (
-    <View style={{ backgroundColor:"#fff", padding:12, borderRadius:10, marginBottom:10 }}>
-      <Text style={{ fontWeight:"700", color:"#009879" }}>{item.titulo}</Text>
-      <Text numberOfLines={2} style={{ marginTop:6 }}>{item.descripcion}</Text>
-      <TouchableOpacity style={{ marginTop:8 }} onPress={() => nav.navigate("JobDetail", { job: item })}>
-        <Text style={{ color:"#009879" }}>Ver detalles</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const renderJob = ({ item }) => {
+    const zona = item.zona_geografica_trabajo;
+    const ubicacion = zona
+      ? `${zona.ciudad || ""}${zona.provincia ? ", " + zona.provincia : ""}`
+      : "Sin ubicación";
 
-  return (
-    <View style={{ flex:1, padding:12, backgroundColor:"#f3fbf7" }}>
-      <Text style={{ fontSize:20, fontWeight:"800", color:"#009879", marginBottom:12 }}>Nuevas ofertas</Text>
-      {loading ? <ActivityIndicator /> :
-        <FlatList data={jobs} keyExtractor={j=>String(j.id_trabajo || j.id)} renderItem={render} ListEmptyComponent={<Text>No hay ofertas</Text>} />
-      }
-    </View>
-  );
+    return (
+      <TouchableOpacity 
+        style={styles.jobCard} 
+        onPress={() => nav.navigate("JobDetail", { job: item })}
+      >
+        <Text style={styles.jobTitle}>{item.titulo || "Sin título"}</Text>
+        <Text numberOfLines={2} style={styles.jobDescription}>{item.descripcion}</Text>
+        <Text style={styles.jobLocation}>Ubicación: {ubicacion}</Text>
+        <Text style={styles.jobDetailText}>Ver detalles y postularse</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.headerTitle}>Ofertas de Trabajo Disponibles</Text>
+      {loading ? (
+        <ActivityIndicator color="#009879" />
+      ) : (
+        <FlatList
+          data={jobs}
+          keyExtractor={(j) => String(j.id_trabajo || j.id)}
+          renderItem={renderJob}
+          ListEmptyComponent={<Text style={styles.emptyText}>No hay trabajos abiertos disponibles.</Text>}
+        />
+      )}
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: { 
+    flex: 1, 
+    padding: 16, 
+    backgroundColor: "#f3fbf7" 
+  },
+  headerTitle: { 
+    fontSize: 20, 
+    fontWeight: "800", 
+    color: "#009879", 
+    marginBottom: 12,
+    textAlign: 'center'
+  },
+  jobCard: {
+    backgroundColor: "#fff",
+    padding: 16,
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd'
+  },
+  jobTitle: { 
+    fontWeight: "700", 
+    color: "#009879",
+    fontSize: 16
+  },
+  jobDescription: { 
+    marginTop: 6,
+    color: '#333'
+  },
+  jobLocation: {
+    color: "#666",
+    marginTop: 10,
+    fontSize: 12
+  },
+  jobDetailText: {
+    color: "#007AFF",
+    marginTop: 8,
+    fontWeight: '600'
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666'
+  }
+});
