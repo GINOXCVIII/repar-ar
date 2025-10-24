@@ -12,14 +12,17 @@ import HomeTrabajadorScreen from "../screens/Trabajador/HomeTrabajadorScreen";
 import CrearTrabajoScreen from "../screens/Contratador/CrearTrabajoScreen";
 import MisTrabajosScreen from "../screens/Contratador/MisTrabajosScreen";
 import MiPerfilScreen from "../screens/MiPerfilScreen";
-import RegistroTrabajadorScreen from "../screens/RegistroTrabajadorScreen"; 
-
+import RegistroTrabajadorScreen from "../screens/RegistroTrabajadorScreen";
+import PostulacionesContratador from "../screens/Contratador/PostulacionesContratador"; // 🆕 nueva pantalla
 
 import { useAuth } from "../contexts/AuthProvider";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+/* =============================
+   TABS DEL CONTRATADOR
+============================= */
 const ContratadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -43,7 +46,27 @@ const ContratadorTabs = () => (
   </Tab.Navigator>
 );
 
-//  Trabajador
+/* =============================
+   STACK CONTRATADOR COMPLETO
+   (Incluye las tabs + pantallas extra)
+============================= */
+const ContratadorStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="ContratadorTabs" component={ContratadorTabs} />
+    <Stack.Screen
+      name="PostulacionesContratador"
+      component={PostulacionesContratador}
+      options={{
+        headerShown: true,
+        title: "Postulaciones",
+      }}
+    />
+  </Stack.Navigator>
+);
+
+/* =============================
+   TABS DEL TRABAJADOR
+============================= */
 const TrabajadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
@@ -63,10 +86,13 @@ const TrabajadorTabs = () => (
   </Tab.Navigator>
 );
 
+/* =============================
+   APP NAVIGATION PRINCIPAL
+============================= */
 const AppNavigation = () => {
-  const { firebaseUser, loading, roleActive } = useAuth();
+  const { firebaseUser, loading, userRole } = useAuth();
 
-  if (loading) return null; 
+  if (loading) return null;
 
   return (
     <NavigationContainer>
@@ -76,19 +102,19 @@ const AppNavigation = () => {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
-        ) : roleActive === "trabajador" ? (
+        ) : userRole === "trabajador" ? (
           <Stack.Screen name="TrabajadorTabs" component={TrabajadorTabs} />
         ) : (
-          <Stack.Screen name="ContratadorTabs" component={ContratadorTabs} />
+          <Stack.Screen name="ContratadorStack" component={ContratadorStack} />
         )}
 
-        <Stack.Screen 
-          name="RegistroTrabajador" 
-          component={RegistroTrabajadorScreen} 
-          options={{ 
-            headerShown: true, 
-            title: 'Registrar como Trabajador' 
-          }} 
+        <Stack.Screen
+          name="RegistroTrabajador"
+          component={RegistroTrabajadorScreen}
+          options={{
+            headerShown: true,
+            title: "Registrar como Trabajador",
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -96,4 +122,3 @@ const AppNavigation = () => {
 };
 
 export default AppNavigation;
-

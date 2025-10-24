@@ -1,14 +1,6 @@
 // src/screens/Contratador/MisTrabajosScreen.js
 // Muestra TODOS los trabajos cuyo campo id_contratador coincide con el id_contratador
 // del contratador asociado al firebase UID del usuario logueado.
-//
-// Flujo:
-// 1) Obtener contratador por firebase_uid
-// 2) Extraer id_contratador
-// 3) Intentar GET /trabajos/?id_contratador=<id>
-// 4) Si no hay resultados o falla, GET /trabajos/ y filtrar localmente por id_contratador
-//
-// Comentarios en español para facilitar mantenimiento.
 
 import React, { useEffect, useState } from "react";
 import {
@@ -26,7 +18,7 @@ import { useIsFocused, useNavigation } from "@react-navigation/native";
 
 export default function MisTrabajosScreen() {
   const { firebaseUser } = useAuth();
-  const [contratador, setContratador] = useState(null); // objeto contratador desde backend
+  const [contratador, setContratador] = useState(null);
   const [trabajos, setTrabajos] = useState([]);
   const [loading, setLoading] = useState(true);
   const isFocused = useIsFocused();
@@ -36,7 +28,6 @@ export default function MisTrabajosScreen() {
     if (isFocused) {
       cargarMisTrabajos();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused, firebaseUser]);
 
   const cargarMisTrabajos = async () => {
@@ -54,7 +45,6 @@ export default function MisTrabajosScreen() {
       const contratadores = Array.isArray(respContr.data) ? respContr.data : [];
 
       if (contratadores.length === 0) {
-        // No hay contratador asociado: avisar y salir
         console.warn("MisTrabajosScreen: no se encontró contratador para uid:", firebaseUser.uid);
         setContratador(null);
         setTrabajos([]);
@@ -82,9 +72,7 @@ export default function MisTrabajosScreen() {
           ? respTrabajosFiltro.data
           : [];
 
-        // Si el backend devolvió una lista (incluso vacía), la usamos:
         if (Array.isArray(trabajosFiltradosPorBackend)) {
-          // Aunque el backend filtre, por seguridad comprobamos y normalizamos tipos.
           const normalized = trabajosFiltradosPorBackend.filter((t) =>
             compararIdContratador(t, idContratador)
           );
@@ -93,19 +81,25 @@ export default function MisTrabajosScreen() {
           return;
         }
       } catch (errFilter) {
-        // Si falla (endpoint no soporta el filtro o error), seguimos al fallback.
-        console.warn("MisTrabajosScreen: petición filtrada por backend falló (fallback):", errFilter?.response?.data || errFilter.message || errFilter);
+        console.warn(
+          "MisTrabajosScreen: petición filtrada por backend falló (fallback):",
+          errFilter?.response?.data || errFilter.message || errFilter
+        );
       }
 
-      // 4) FALLBACK: traer todos los trabajos y filtrar localmente por id_contratador exacto
+      // 4) Fallback: traer todos los trabajos y filtrar localmente
       try {
         const respAll = await api.get("/trabajos/");
         const todos = Array.isArray(respAll.data) ? respAll.data : [];
-
-        const trabajosFiltrados = todos.filter((t) => compararIdContratador(t, idContratador));
+        const trabajosFiltrados = todos.filter((t) =>
+          compararIdContratador(t, idContratador)
+        );
         setTrabajos(trabajosFiltrados);
       } catch (errAll) {
-        console.error("MisTrabajosScreen: error al obtener todos los trabajos:", errAll?.response?.data || errAll.message || errAll);
+        console.error(
+          "MisTrabajosScreen: error al obtener todos los trabajos:",
+          errAll?.response?.data || errAll.message || errAll
+        );
         Alert.alert("Error", "No se pudieron obtener los trabajos. Revisá la conexión al backend.");
         setTrabajos([]);
       }
@@ -118,32 +112,37 @@ export default function MisTrabajosScreen() {
     }
   };
 
-  // Función que compara el id_contratador esperado con el trabajo,
-  // usando el campo exacto que usa tu backend: t.id_contratador
-  // Hacemos conversión segura a string para evitar problemas de tipo.
   const compararIdContratador = (trabajo, idContratadorEsperado) => {
-    // Si el trabajo trae exactamente id_contratador en la raíz, usamos eso (es lo que pediste)
     if (trabajo == null) return false;
-
-    // Primer preferido: campo tal como está en tu backend
     if (trabajo.id_contratador !== undefined && trabajo.id_contratador !== null) {
       return String(trabajo.id_contratador) === String(idContratadorEsperado);
     }
-
-    // Si por alguna razón vino anidado en 'contratador' (defensivo), lo cubrimos:
-    if (trabajo.contratador && (trabajo.contratador.id_contratador !== undefined || trabajo.contratador.id !== undefined)) {
+    if (
+      trabajo.contratador &&
+      (trabajo.contratador.id_contratador !== undefined || trabajo.contratador.id !== undefined)
+    ) {
       const nested = trabajo.contratador.id_contratador ?? trabajo.contratador.id;
       return String(nested) === String(idContratadorEsperado);
     }
-
-    // No se encontró campo, entonces no es del contratador
     return false;
+  };
+
+  const handleVerPostulantes = (trabajo) => {
+    const id = trabajo.id_trabajo ?? trabajo.id;
+    if (!id) {
+      Alert.alert("Error", "No se pudo determinar el ID del trabajo.");
+      return;
+    }
+    navigation.navigate("PostulacionesContratador", { trabajoId: id });
   };
 
   const renderItem = ({ item }) => {
     const titulo = item.titulo ?? item.title ?? "Sin título";
     const descripcion = item.descripcion ?? "";
-    const profesion = item.profesion_requerida?.nombre_profesion ?? item.profesion_requerida?.nombre ?? "No especificada";
+    const profesion =
+      item.profesion_requerida?.nombre_profesion ??
+      item.profesion_requerida?.nombre ??
+      "No especificada";
     const ciudad = item.zona_geografica_trabajo?.ciudad ?? item.zona_geografica_trabajo?.nombre ?? "-";
     const provincia = item.zona_geografica_trabajo?.provincia ?? "-";
     const estado = item.estado?.descripcion ?? "-";
@@ -155,12 +154,15 @@ export default function MisTrabajosScreen() {
 
         <View style={styles.row}>
           <Text style={styles.info}>{profesion}</Text>
-          <Text style={styles.info}>{ciudad}{provincia ? `, ${provincia}` : ""}</Text>
+          <Text style={styles.info}>
+            {ciudad}
+            {provincia ? `, ${provincia}` : ""}
+          </Text>
         </View>
 
         <View style={styles.rowBottom}>
           <Text style={styles.estado}>Estado: {estado}</Text>
-          <TouchableOpacity onPress={() => navigation.navigate && navigation.navigate("JobDetail", { job: item })}>
+          <TouchableOpacity onPress={() => handleVerPostulantes(item)}>
             <Text style={styles.link}>Ver postulantes</Text>
           </TouchableOpacity>
         </View>
@@ -176,7 +178,9 @@ export default function MisTrabajosScreen() {
         <ActivityIndicator size="large" color="#0b9d57" style={{ marginTop: 20 }} />
       ) : trabajos.length === 0 ? (
         <View style={{ padding: 20 }}>
-          <Text style={{ textAlign: "center", color: "#666" }}>No tenés trabajos publicados todavía.</Text>
+          <Text style={{ textAlign: "center", color: "#666" }}>
+            No tenés trabajos publicados todavía.
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -215,7 +219,12 @@ const styles = StyleSheet.create({
   descripcion: { marginTop: 8, color: "#333" },
   row: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   info: { color: "#0b9d57", fontWeight: "600" },
-  rowBottom: { marginTop: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  rowBottom: {
+    marginTop: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   estado: { color: "#006400", fontWeight: "600" },
   link: { color: "#0b9d57", fontWeight: "700" },
 });
