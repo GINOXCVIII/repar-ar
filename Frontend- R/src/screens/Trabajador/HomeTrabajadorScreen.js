@@ -56,8 +56,8 @@ export default function HomeTrabajadorScreen() {
       };
       await api.post('/postulaciones/', payload);
       Alert.alert("Éxito", "Te has postulado correctamente.");
-      closeModal(); // Cerrar modal inmediatamente tras éxito
-      await fetchMisPostulaciones(workerProfile.id_trabajador); // Actualizar lista en segundo plano
+      closeModal();
+      await fetchMisPostulaciones(workerProfile.id_trabajador);
     } catch (e) {
       console.error("Error al postularse:", e.response?.data || e.message || e);
       const errorMessage = e.response?.data ? JSON.stringify(e.response.data) : (e.message || "Error desconocido");
@@ -67,14 +67,21 @@ export default function HomeTrabajadorScreen() {
     }
   };
 
-  const renderJob = ({ item }) => {
-    const zona = item.id_zona_geografica_trabajo;
-    const profesion = item.id_profesion_requerida;
-    const ubicacion = zona
-      ? `${zona.ciudad || ""}${zona.provincia ? ", " + zona.provincia : ""}`
-      : "Sin ubicación";
+  const handleChatPress = (jobId) => {
+    console.log("Abrir chat para trabajo ID:", jobId);
+  };
 
-    // Verificar si el trabajo actual ya está postulado por el trabajador
+  const renderJob = ({ item }) => {
+    const zona = item.zona_geografica_trabajo; // Corregido: sin id_
+    const profesion = item.id_profesion_requerida;
+
+    let ubicacion = "Sin ubicación";
+    if (zona && typeof zona === 'object' && (zona.ciudad || zona.provincia)) {
+       const ciudad = zona.ciudad || "";
+       const provincia = zona.provincia || "";
+       ubicacion = ciudad && provincia ? `${ciudad}, ${provincia}` : (ciudad || provincia);
+    }
+
     const isJobAlreadyApplied = misPostulaciones.some(p => p.trabajo?.id_trabajo === item.id_trabajo);
 
     return (
@@ -88,13 +95,14 @@ export default function HomeTrabajadorScreen() {
         {isJobAlreadyApplied ? (
             <Text style={styles.appliedJobText}>Ya postulado, esperando devolución.</Text>
         ) : (
-            <Text style={styles.jobDetailText}>Ver detalles</Text> // Texto cambiado
+            <Text style={styles.jobDetailText}>Ver detalles</Text>
         )}
       </TouchableOpacity>
     );
   };
 
   const yaPostulado = selectedJob && misPostulaciones.some(p => p.trabajo?.id_trabajo === selectedJob.id_trabajo);
+  const isAssignedToMe = selectedJob?.estado?.id_estado === 3 && selectedJob?.id_trabajador === workerProfile?.id_trabajador;
 
   return (
     <View style={styles.container}>
@@ -125,14 +133,24 @@ export default function HomeTrabajadorScreen() {
                 <Text style={styles.modalDescription}>{selectedJob.descripcion}</Text>
                 <Text style={styles.modalLabel}>Ubicación:</Text>
                 <Text style={styles.modalText}>
-                  {selectedJob.id_zona_geografica_trabajo
-                    ? `${selectedJob.id_zona_geografica_trabajo.calle || ''}, ${selectedJob.id_zona_geografica_trabajo.ciudad || ''}, ${selectedJob.id_zona_geografica_trabajo.provincia || ''}`
+                  {selectedJob.zona_geografica_trabajo && typeof selectedJob.zona_geografica_trabajo === 'object' // Corregido: sin id_
+                    ? `${selectedJob.zona_geografica_trabajo.calle || ''}, ${selectedJob.zona_geografica_trabajo.ciudad || ''}, ${selectedJob.zona_geografica_trabajo.provincia || ''}`
                     : "No especificada"}
                 </Text>
                 <Text style={styles.modalLabel}>Fecha de Publicación:</Text>
                 <Text style={styles.modalText}>{new Date(selectedJob.fecha_creacion).toLocaleDateString()}</Text>
 
-                {yaPostulado ? (
+                {isAssignedToMe ? (
+                  <>
+                    <Text style={[styles.jobState, styles.acceptedState, {textAlign: 'center', marginBottom: 10}]}>Trabajo Asignado</Text>
+                    <View style={styles.modalButtonContainer}>
+                      <Button title="Chat" onPress={() => handleChatPress(selectedJob.id_trabajo)} color="#007AFF"/>
+                      <View style={{marginTop: 10}}>
+                        <Button title="Cerrar" onPress={closeModal} color="#666"/>
+                      </View>
+                    </View>
+                  </>
+                ) : yaPostulado ? (
                   <>
                     <Text style={styles.alreadyAppliedText}>Ya postulado, esperando devolución.</Text>
                     <View style={{marginTop: 10}}>
@@ -201,7 +219,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontWeight: '600'
   },
-  appliedJobText: { // Nuevo estilo para el texto "Ya postulado" en la tarjeta
+  appliedJobText: {
     color: '#555',
     marginTop: 8,
     fontStyle: 'italic',
@@ -264,6 +282,16 @@ const styles = StyleSheet.create({
       textAlign: 'center',
       fontStyle: 'italic',
       color: '#666'
-  }
+  },
+  jobState: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#888',
+    marginTop: 4,
+  },
+  acceptedState: {
+      color: '#28a745',
+      fontWeight: 'bold',
+  },
 });
 
