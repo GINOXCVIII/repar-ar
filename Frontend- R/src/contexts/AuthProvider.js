@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [workerProfile, setWorkerProfile] = useState(null);
   const [roleActive, setRoleActive] = useState(null);
+  const [misPostulaciones, setMisPostulaciones] = useState([]); // Nuevo estado
   const [loading, setLoading] = useState(true);
 
   const normalizeProfile = (data) => {
@@ -32,6 +33,17 @@ export const AuthProvider = ({ children }) => {
     };
   };
 
+  const fetchMisPostulaciones = async (workerId) => {
+    if (!workerId) return;
+    try {
+      const postulacionesRes = await axios.get(`${BASE_URL}/postulaciones/?id_trabajador=${workerId}`);
+      setMisPostulaciones(postulacionesRes.data || []);
+    } catch (err) {
+      console.error("Error al cargar mis postulaciones:", err);
+      setMisPostulaciones([]);
+    }
+  };
+
   const fetchWorkerProfile = async (contratadorId) => {
     if (!contratadorId) return null;
     try {
@@ -39,14 +51,17 @@ export const AuthProvider = ({ children }) => {
       if (workerRes.data && workerRes.data.length > 0) {
         const workerData = workerRes.data[0];
         setWorkerProfile(workerData);
+        await fetchMisPostulaciones(workerData.id_trabajador); // Cargar postulaciones
         return workerData;
       } else {
         setWorkerProfile(null);
+        setMisPostulaciones([]); 
         return null;
       }
     } catch (err) {
       console.error("No se pudo verificar el perfil de trabajador.", err);
       setWorkerProfile(null);
+      setMisPostulaciones([]);
       return null;
     }
   };
@@ -69,10 +84,12 @@ export const AuthProvider = ({ children }) => {
         setProfile({ raw: data, id: null, nombre: "", apellido: "", email_contratador: data.email_firebase || "" });
         setRoleActive("contratador");
         setWorkerProfile(null);
+        setMisPostulaciones([]);
         return { registered: false, profile: data };
       } else {
         setProfile(null);
         setWorkerProfile(null);
+        setMisPostulaciones([]);
         setRoleActive(null);
         return { registered: false };
       }
@@ -80,15 +97,12 @@ export const AuthProvider = ({ children }) => {
       if (contratadorProfile && contratadorProfile.id_contratador) {
         setProfile(contratadorProfile);
         existingWorkerProfile = await fetchWorkerProfile(contratadorProfile.id_contratador);
-
-        // Siempre iniciar como contratador si el perfil existe
         setRoleActive("contratador");
-
         return { registered: true, profile: contratadorProfile, workerProfile: existingWorkerProfile };
       } else {
-         // Asegurarse de limpiar si no se encontró perfil de contratador
          setProfile(null);
          setWorkerProfile(null);
+         setMisPostulaciones([]);
          setRoleActive(null);
          return { registered: false };
       }
@@ -96,6 +110,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Error al consultar login backend:", err.response?.data || err.message || err);
       setProfile(null);
       setWorkerProfile(null);
+      setMisPostulaciones([]);
       setRoleActive(null);
       return { registered: false, error: err };
     }
@@ -113,11 +128,13 @@ export const AuthProvider = ({ children }) => {
           console.error("Error en ensureBackendProfile:", e);
           setProfile(null);
           setWorkerProfile(null);
+          setMisPostulaciones([]);
           setRoleActive(null);
         }
       } else {
         setProfile(null);
         setWorkerProfile(null);
+        setMisPostulaciones([]);
         setRoleActive(null);
       }
       setLoading(false);
@@ -161,6 +178,7 @@ export const AuthProvider = ({ children }) => {
         setProfile(p);
         setRoleActive("contratador");
         setWorkerProfile(null);
+        setMisPostulaciones([]);
         return { user, backend: res.data };
       } else {
         return { user, backend: res.data };
@@ -177,6 +195,7 @@ export const AuthProvider = ({ children }) => {
       setFirebaseUser(null);
       setProfile(null);
       setWorkerProfile(null);
+      setMisPostulaciones([]);
       setRoleActive(null);
     } catch (err) {
       console.error("Error signOut:", err);
@@ -185,11 +204,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const convertToWorker = async () => {
-    console.log("AuthProvider: Actualizando rol a 'trabajador'");
     setRoleActive("trabajador");
     if (profile && profile.id_contratador) {
-       // Refrescar workerProfile por si acaso
-      await fetchWorkerProfile(profile.id_contratador);
+       const workerData = await fetchWorkerProfile(profile.id_contratador);
+       if (workerData) {
+         await fetchMisPostulaciones(workerData.id_trabajador);
+       }
     }
     return Promise.resolve();
   };
@@ -210,6 +230,8 @@ export const AuthProvider = ({ children }) => {
         setProfile,
         workerProfile,
         roleActive,
+        misPostulaciones,
+        setMisPostulaciones, 
         loading,
         signIn,
         signUp,
