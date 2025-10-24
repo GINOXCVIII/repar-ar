@@ -115,11 +115,11 @@ class CalificacionTrabajador(models.Model):
     fecha_calificacion = models.DateTimeField()
     
     class Meta:
-        verbose_name = "Calificacion del trabajador"
-        verbose_name_plural = "Cafilicaciones de trabajadores"
+        verbose_name = "Calificacion al trabajador"
+        verbose_name_plural = "Cafilicaciones a trabajadores"
         
     def __str__(self):
-        return f"{self.id_calificacion_trabajador}"
+        return f"{self.id_calificacion_trabajador} Trabajador calificado: {self.id_trabajador.id_contratador.nombre} {self.id_trabajador.id_contratador.apellido}"
 
 class CalificacionContratador(models.Model):
     id_calificacion_contratador = models.AutoField(primary_key=True)
@@ -131,11 +131,11 @@ class CalificacionContratador(models.Model):
     fecha_calificacion = models.DateTimeField()
     
     class Meta:
-        verbose_name = "Calificacion del contratador"
-        verbose_name_plural = "Cafilicaciones de contratadores"
+        verbose_name = "Calificacion al contratador"
+        verbose_name_plural = "Cafilicaciones a contratadores"
         
     def __str__(self):
-        return f"{self.id_calificacion_contratador}"
+        return f"{self.id_calificacion_contratador} Contratador calificado: {self.id_contratador.nombre} {self.id_contratador.apellido}"
 
 class TrabajadoresProfesion(models.Model):
     id_trabajador_profesion = models.AutoField(primary_key=True)

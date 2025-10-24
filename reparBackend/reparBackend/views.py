@@ -306,7 +306,19 @@ class PostulacionView(APIView):
             item = get_object_or_404(Postulacion, pk=id)
             serializer = PostulacionSerializer(item)
             return Response(serializer.data)
+        
+        """
         items = Postulacion.objects.all()
+        serializer = PostulacionSerializer(items, many=True)
+        return Response(serializer.data)
+        """
+        
+        id_trabajo = request.query_params.get('id_trabajo')
+        if id_trabajo:
+            items = Postulacion.objects.filter(id_trabajo=id_trabajo)
+        else:
+            items = Postulacion.objects.all()
+
         serializer = PostulacionSerializer(items, many=True)
         return Response(serializer.data)
 
@@ -338,7 +350,20 @@ class CalificacionTrabajadorView(APIView):
             item = get_object_or_404(CalificacionTrabajador, pk=id)
             serializer = CalificacionTrabajadorSerializer(item)
             return Response(serializer.data)
+        
+        """
         items = CalificacionTrabajador.objects.all()
+        serializer = CalificacionTrabajadorSerializer(items, many=True)
+        return Response(serializer.data)
+        """
+        
+        id_trabajador = request.query_params.get('id_trabajador')
+        # print("SUSUME TOMORROW ", id_trabajador)
+        if id_trabajador:
+            items = CalificacionTrabajador.objects.filter(id_trabajador=id_trabajador)
+        else:
+            items = CalificacionTrabajador.objects.all()
+
         serializer = CalificacionTrabajadorSerializer(items, many=True)
         return Response(serializer.data)
 
@@ -370,7 +395,20 @@ class CalificacionContratadorView(APIView):
             item = get_object_or_404(CalificacionContratador, pk=id)
             serializer = CalificacionContratadorSerializer(item)
             return Response(serializer.data)
+        
+        """
         items = CalificacionContratador.objects.all()
+        serializer = CalificacionContratadorSerializer(items, many=True)
+        return Response(serializer.data)
+        """
+        
+        id_contratador = request.query_params.get('id_contratador')
+        # print("SUSUME TOMORROW ", id_trabajador)
+        if id_contratador:
+            items = CalificacionContratador.objects.filter(id_contratador=id_contratador)
+        else:
+            items = CalificacionContratador.objects.all()
+
         serializer = CalificacionContratadorSerializer(items, many=True)
         return Response(serializer.data)
 

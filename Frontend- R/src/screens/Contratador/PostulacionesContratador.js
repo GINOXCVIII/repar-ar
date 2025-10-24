@@ -14,13 +14,13 @@ import {
 } from "react-native";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../contexts/AuthProvider"; // 🔹 usamos tu AuthProvider
+import { useAuth } from "../../contexts/AuthProvider";
 
-const BASE_URL = "http://127.0.0.1:8000/api"; // ajustá si cambia tu backend
+const BASE_URL = "http://127.0.0.1:8000/api";
 
 export default function PostulacionesContratador({ route, navigation }) {
   const { trabajoId } = route.params || {};
-  const { firebaseUser } = useAuth(); // 🔹 accedemos si se necesitara el user
+  const { firebaseUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [postulantes, setPostulantes] = useState([]);
   const [selectedComments, setSelectedComments] = useState([]);
@@ -41,13 +41,15 @@ export default function PostulacionesContratador({ route, navigation }) {
   const fetchPostulantes = async () => {
     setLoading(true);
     try {
+      console.log("cual es el id del trabajo que voy a usar?: ", trabajoId)
       const res = await axios.get(`${BASE_URL}/postulaciones/`, {
         params: { id_trabajo: trabajoId },
       });
       const postulaciones = Array.isArray(res.data) ? res.data : [];
 
-      const idsTrabajadores = Array.from(new Set(postulaciones.map((p) => p.id_trabajador)));
-
+      const idsTrabajadores = Array.from(new Set(postulaciones.map((p) => p.trabajador.id_trabajador)));
+      console.log("Shioriko: ", idsTrabajadores)
+      
       const detallesPromises = idsTrabajadores.map(async (id_trabajador) => {
         let trabajadorData = null;
         try {
@@ -57,10 +59,13 @@ export default function PostulacionesContratador({ route, navigation }) {
           console.warn("No se pudo obtener trabajador", id_trabajador, err.response?.data || err);
         }
 
+        console.log("que poronga es esto: ", trabajadorData)
+
         let califs = [];
         try {
+          console.log("SUNNY: ", trabajadorData.id_trabajador)
           const cRes = await axios.get(`${BASE_URL}/calificaciones/calificaciones-trabajadores/`, {
-            params: { id_trabajador },
+            params: { id_trabajador: trabajadorData.id_trabajador },
           });
           califs = Array.isArray(cRes.data) ? cRes.data : [];
         } catch (err) {
@@ -71,10 +76,12 @@ export default function PostulacionesContratador({ route, navigation }) {
         const numeros = califs.map((c) => Number(c.calificacion)).filter((n) => !isNaN(n));
         const promedio = numeros.length ? numeros.reduce((a, b) => a + b, 0) / numeros.length : null;
 
+        console.log("goku dice: ", numeros, promedio)
+
         return {
           id_trabajador,
-          nombre: trabajadorData?.nombre ?? "",
-          apellido: trabajadorData?.apellido ?? "",
+          nombre: trabajadorData?.contratador.nombre ?? "",
+          apellido: trabajadorData?.contratador.apellido ?? "",
           promedio,
           comentarios,
         };
@@ -121,13 +128,12 @@ export default function PostulacionesContratador({ route, navigation }) {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={styles.title}>{item.apellido || "Sin apellido"}</Text>
+        <Text style={styles.title}>{ item.apellido + ", " + item.nombre || "Sin apellido"}</Text>
         <Ionicons name="person-circle-outline" size={28} color="#2d6a4f" />
       </View>
       <Text style={styles.subtitle}>
         {item.promedio !== null ? `Promedio: ${item.promedio.toFixed(1)}` : "Sin calificaciones"}
       </Text>
-      <Text style={styles.description}>{item.nombre}</Text>
       <View style={styles.row}>
         <TouchableOpacity style={styles.linkButton} onPress={() => openComments(item.comentarios)}>
           <Text style={styles.linkText}>Ver comentarios</Text>
