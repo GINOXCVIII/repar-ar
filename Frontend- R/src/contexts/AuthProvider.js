@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [workerProfile, setWorkerProfile] = useState(null);
   const [roleActive, setRoleActive] = useState(null);
-  const [misPostulaciones, setMisPostulaciones] = useState([]); // Nuevo estado
+  const [misPostulaciones, setMisPostulaciones] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const normalizeProfile = (data) => {
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
     if (!workerId) return;
     try {
       const postulacionesRes = await axios.get(`${BASE_URL}/postulaciones/?id_trabajador=${workerId}`);
-      setMisPostulaciones(postulacionesRes.data || []);
+      setMisPostulaciones([...(postulacionesRes.data || [])]); 
     } catch (err) {
       console.error("Error al cargar mis postulaciones:", err);
       setMisPostulaciones([]);
@@ -51,11 +51,11 @@ export const AuthProvider = ({ children }) => {
       if (workerRes.data && workerRes.data.length > 0) {
         const workerData = workerRes.data[0];
         setWorkerProfile(workerData);
-        await fetchMisPostulaciones(workerData.id_trabajador); // Cargar postulaciones
+        await fetchMisPostulaciones(workerData.id_trabajador);
         return workerData;
       } else {
         setWorkerProfile(null);
-        setMisPostulaciones([]); 
+        setMisPostulaciones([]);
         return null;
       }
     } catch (err) {
@@ -231,7 +231,7 @@ export const AuthProvider = ({ children }) => {
         workerProfile,
         roleActive,
         misPostulaciones,
-        setMisPostulaciones, 
+        setMisPostulaciones,
         loading,
         signIn,
         signUp,
@@ -239,6 +239,7 @@ export const AuthProvider = ({ children }) => {
         convertToWorker,
         fetchBackendProfileWithToken,
         toggleRole,
+        fetchMisPostulaciones, 
       }}
     >
       {!loading && children}

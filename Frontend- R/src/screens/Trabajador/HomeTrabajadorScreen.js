@@ -72,7 +72,7 @@ export default function HomeTrabajadorScreen() {
   };
 
   const renderJob = ({ item }) => {
-    const zona = item.zona_geografica_trabajo; // Corregido: sin id_
+    const zona = item.zona_geografica_trabajo; // Corregido aquí
     const profesion = item.id_profesion_requerida;
 
     let ubicacion = "Sin ubicación";
@@ -115,6 +115,7 @@ export default function HomeTrabajadorScreen() {
           keyExtractor={(j) => String(j.id_trabajo || j.id)}
           renderItem={renderJob}
           ListEmptyComponent={<Text style={styles.emptyText}>No hay trabajos abiertos disponibles.</Text>}
+          extraData={misPostulaciones}
         />
       )}
 
@@ -133,7 +134,7 @@ export default function HomeTrabajadorScreen() {
                 <Text style={styles.modalDescription}>{selectedJob.descripcion}</Text>
                 <Text style={styles.modalLabel}>Ubicación:</Text>
                 <Text style={styles.modalText}>
-                  {selectedJob.zona_geografica_trabajo && typeof selectedJob.zona_geografica_trabajo === 'object' // Corregido: sin id_
+                  {selectedJob.zona_geografica_trabajo && typeof selectedJob.zona_geografica_trabajo === 'object' // Corregido aquí
                     ? `${selectedJob.zona_geografica_trabajo.calle || ''}, ${selectedJob.zona_geografica_trabajo.ciudad || ''}, ${selectedJob.zona_geografica_trabajo.provincia || ''}`
                     : "No especificada"}
                 </Text>
