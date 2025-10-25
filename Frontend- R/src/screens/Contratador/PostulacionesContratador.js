@@ -107,7 +107,6 @@ export default function PostulacionesContratador({ route, navigation }) {
     setConfirmModalVisible(true);
   };
 
-  // ✅ Actualizado: ahora cambia también el estado del trabajo a 3
   const confirmChooseTrabajador = async () => {
     if (!chosenTrabajador) return;
     setProcessingChoice(true);

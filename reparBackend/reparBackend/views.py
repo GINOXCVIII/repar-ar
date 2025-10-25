@@ -318,8 +318,8 @@ class PostulacionView(APIView):
             serializer = PostulacionSerializer(item)
             return Response(serializer.data)
         
-        """
         items = Postulacion.objects.all()
+        """
         serializer = PostulacionSerializer(items, many=True)
         return Response(serializer.data)
         """
@@ -328,16 +328,15 @@ class PostulacionView(APIView):
         id_trabajo = request.query_params.get('id_trabajo')
         if id_trabajo:
             items = Postulacion.objects.filter(id_trabajo=id_trabajo)
-        else:
-            items = Postulacion.objects.all()
+        # else:
+        #    items = Postulacion.objects.all()
             
         # Filtro postulaciones por id_trabajador
         id_trabajador = request.query_params.get('id_trabajador')
-        print(id_trabajador)
         if id_trabajador:
             items = Postulacion.objects.filter(id_trabajador=id_trabajador)
-        else:
-            items = Postulacion.objects.all()
+        # else:
+        #    items = Postulacion.objects.all()
 
         serializer = PostulacionSerializer(items, many=True)
         return Response(serializer.data)
