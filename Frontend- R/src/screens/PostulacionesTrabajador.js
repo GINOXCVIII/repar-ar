@@ -75,11 +75,23 @@ export default function MisPostulacionesScreen() {
     const id_trabajo = selectedJobToRate.id_trabajo;
     const id_trabajador = workerProfile.id_trabajador;
     const id_contratador = selectedJobToRate.contratador?.id_contratador;
+    const current_estado = selectedJobToRate.estado?.id_estado;
 
     if (!id_contratador) {
        Alert.alert("Error", "No se pudo identificar al contratador para calificar.");
        setIsSubmittingRating(false);
        return;
+    }
+    
+    let newEstadoId;
+    if (current_estado === 3) {
+      newEstadoId = 4; 
+    } else if (current_estado === 4) {
+      newEstadoId = 5; 
+    } else {
+      Alert.alert("Error", "Este trabajo no se puede calificar en este estado.");
+      setIsSubmittingRating(false);
+      return;
     }
 
     try {
@@ -94,7 +106,7 @@ export default function MisPostulacionesScreen() {
       await api.post(`${BASE_URL}/calificaciones/calificaciones-contratadores/`, ratingPayload);
 
       const jobUpdatePayload = {
-        id_estado: 5
+        id_estado: newEstadoId
       };
       await api.patch(`${BASE_URL}/trabajos/${id_trabajo}/`, jobUpdatePayload);
 
@@ -134,21 +146,22 @@ export default function MisPostulacionesScreen() {
     const zona = trabajo.zona_geografica_trabajo;
     const ubicacion = zona ? `${zona.ciudad || ""}${zona.provincia ? ", " + zona.provincia : ""}` : "Sin ubicación";
     
-    const isActivo = trabajo.estado?.id_estado === 3;
-    const isEsperandoValoracion = trabajo.estado?.id_estado === 4;
+    const idEstado = trabajo.estado?.id_estado;
+    const isActivo = idEstado === 3;
+    const isEsperandoValoracion = idEstado === 4;
+    const isFinalizado = idEstado === 5;
 
     const estadoTexto = trabajo.estado?.descripcion ?? "No definido";
+    let estadoStyle = styles.jobState;
+    if (isActivo || isEsperandoValoracion) estadoStyle = [styles.jobState, styles.acceptedState];
+    if (isFinalizado) estadoStyle = [styles.jobState, styles.finishedState];
 
     return (
       <View style={styles.jobCard}>
         <Text style={styles.jobTitle}>{trabajo.titulo || "S/Titulo"}</Text>
         <Text style={styles.jobProf}>{trabajo.profesion_requerida?.nombre_profesion || "S/Profesion"}</Text>
 
-        {isActivo || isEsperandoValoracion ? (
-          <Text style={[styles.jobState, styles.acceptedState]}>{isActivo ? "Trabajo Activo" : "Esperando Calificación"}</Text>
-        ) : (
-          <Text style={styles.jobState}>Estado: {estadoTexto}</Text>
-        )}
+        <Text style={estadoStyle}>Estado: {estadoTexto}</Text>
 
         <Text numberOfLines={2} style={styles.jobDescription}>{trabajo.descripcion ?? ""}</Text>
         <Text style={styles.jobLocation}>Ubicación: {ubicacion}</Text>
@@ -167,9 +180,11 @@ export default function MisPostulacionesScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity onPress={() => nav.navigate("JobDetail", { job: trabajo })}>
-             <Text style={styles.jobDetailText}>Ver detalles del trabajo</Text>
-          </TouchableOpacity>
+          !isFinalizado && (
+            <TouchableOpacity onPress={() => nav.navigate("JobDetail", { job: trabajo })}>
+               <Text style={styles.jobDetailText}>Ver detalles del trabajo</Text>
+            </TouchableOpacity>
+          )
         )}
       </View>
     );
@@ -272,6 +287,10 @@ const styles = StyleSheet.create({
   acceptedState: { 
      color: '#28a745', 
      fontWeight: 'bold',
+  },
+  finishedState: {
+    color: '#555',
+    fontStyle: 'italic',
   },
   jobDescription: {
     marginTop: 6,
