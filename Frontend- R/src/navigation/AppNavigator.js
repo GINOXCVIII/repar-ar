@@ -7,24 +7,28 @@ import { Ionicons } from "@expo/vector-icons";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import HomeContratadorScreen from "../screens/Contratador/HomeContratadorScreen";
-import HomeTrabajadorScreen from "../screens/Trabajador/HomeTrabajadorScreen";
 import CrearTrabajoScreen from "../screens/Contratador/CrearTrabajoScreen";
 import MisTrabajosScreen from "../screens/Contratador/MisTrabajosScreen";
+import PostulacionesContratador from "../screens/Contratador/PostulacionesContratador";
+
+import HomeTrabajadorScreen from "../screens/Trabajador/HomeTrabajadorScreen";
+import PostulacionesTrabajador from "../screens/PostulacionesTrabajador";
+
 import MiPerfilScreen from "../screens/MiPerfilScreen";
 import RegistroTrabajadorScreen from "../screens/RegistroTrabajadorScreen";
-import PostulacionesContratador from "../screens/Contratador/PostulacionesContratador";
-import MisPostulacionesScreen from "../screens/PostulacionesTrabajador";
+import ChatScreen from "../screens/ChatScreen";
 
 import { useAuth } from "../contexts/AuthProvider";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// === TABS CONTRATADOR ===
 const ContratadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
-      tabBarActiveTintColor: "#007AFF",
+      tabBarActiveTintColor: "#0b9d57",
       tabBarInactiveTintColor: "#999",
       tabBarIcon: ({ color, size }) => {
         let iconName;
@@ -43,25 +47,12 @@ const ContratadorTabs = () => (
   </Tab.Navigator>
 );
 
-const ContratadorStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="ContratadorTabs" component={ContratadorTabs} />
-    <Stack.Screen
-      name="PostulacionesContratador"
-      component={PostulacionesContratador}
-      options={{
-        headerShown: true,
-        title: "Postulaciones",
-      }}
-    />
-  </Stack.Navigator>
-);
-
+// === TABS TRABAJADOR ===
 const TrabajadorTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
-      tabBarActiveTintColor: "#007AFF",
+      tabBarActiveTintColor: "#0b9d57",
       tabBarInactiveTintColor: "#999",
       tabBarIcon: ({ color, size }) => {
         let iconName;
@@ -73,7 +64,7 @@ const TrabajadorTabs = () => (
     })}
   >
     <Tab.Screen name="Inicio" component={HomeTrabajadorScreen} />
-    <Tab.Screen name="Mis Postulaciones" component={MisPostulacionesScreen} />
+    <Tab.Screen name="Mis Postulaciones" component={PostulacionesTrabajador} />
     <Tab.Screen name="Perfil" component={MiPerfilScreen} />
   </Tab.Navigator>
 );
@@ -94,15 +85,26 @@ const AppNavigation = () => {
         ) : roleActive === "trabajador" ? (
           <Stack.Screen name="TrabajadorTabs" component={TrabajadorTabs} />
         ) : (
-          <Stack.Screen name="ContratadorStack" component={ContratadorStack} />
+          <Stack.Screen name="ContratadorTabs" component={ContratadorTabs} />
         )}
+
+        {/* STACK GLOBAL */}
+        <Stack.Screen
+          name="PostulacionesContratador"
+          component={PostulacionesContratador}
+          options={{ headerShown: true, title: "Postulantes" }}
+        />
+
+        <Stack.Screen
+          name="Chat"
+          component={ChatScreen}
+          options={{ headerShown: true, title: "Chat" }}
+        />
+
         <Stack.Screen
           name="RegistroTrabajador"
           component={RegistroTrabajadorScreen}
-          options={{
-            headerShown: true,
-            title: "Registrar como Trabajador",
-          }}
+          options={{ headerShown: true, title: "Registrar como Trabajador" }}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -110,4 +112,3 @@ const AppNavigation = () => {
 };
 
 export default AppNavigation;
-

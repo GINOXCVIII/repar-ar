@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Button } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Button, Alert } from "react-native";
 import api from "../api/api";
 import { useAuth } from "../contexts/AuthProvider";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 const BASE_URL = "http://127.0.0.1:8000/api";
 
@@ -21,12 +22,12 @@ export default function MisPostulacionesScreen() {
       return;
     }
     loadMyJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused, workerProfile]);
 
   const loadMyJobs = async () => {
     setLoading(true);
     try {
-      // const resp = await api.get(`${BASE_URL}/trabajos/?id_trabajador=${workerProfile.id_trabajador}`);
       const resp = await api.get(`${BASE_URL}/postulaciones/?id_trabajador=${workerProfile.id_trabajador}`);
       setJobs(resp.data || []);
     } catch (e) {
@@ -38,46 +39,50 @@ export default function MisPostulacionesScreen() {
   };
 
   const handleChatPress = (jobId) => {
-    // Lógica futura para abrir el chat
-    console.log("Abrir chat para trabajo ID:", jobId);
+    if (!jobId) {
+      Alert.alert("Error", "No se encontró el id del trabajo para abrir el chat.");
+      return;
+    }
+    // navegamos al stack global "Chat" con el trabajo
+    nav.navigate("Chat", { trabajoId: jobId });
   };
 
   const renderJob = ({ item }) => {
-    console.log("Contenido del item actual: ", item)
-    const trabajo = item.trabajo
+    // item es una postulacion; dentro está item.trabajo
+    const trabajo = item.trabajo;
+    if (!trabajo) return null;
+
     const zona = trabajo.zona_geografica_trabajo;
-    const ubicacion = zona
-      ? `${zona.ciudad || ""}${zona.provincia ? ", " + zona.provincia : ""}`
-      : "Sin ubicación";
-    
+    const ubicacion = zona ? `${zona.ciudad || ""}${zona.provincia ? ", " + zona.provincia : ""}` : "Sin ubicación";
+
     // Verificar si trabajo activo (estado ID 3)
     const isActivo = trabajo.estado?.id_estado === 3;
 
-    console.log("trabajo: ", trabajo, "\nzona: ", zona, "\nubicacion: ", ubicacion, "\ņisActivo", isActivo)
-
-    // <Text style={styles.jobTitle}>{item.id_profesion_requerida?.nombre_profesion || "Trabajo"}</Text>
+    // Para mostrar estado legible:
+    const estadoTexto = trabajo.estado?.descripcion ?? "No definido";
 
     return (
       <View style={styles.jobCard}>
         <Text style={styles.jobTitle}>{trabajo.titulo || "S/Titulo"}</Text>
 
         <Text style={styles.jobProf}>{trabajo.profesion_requerida?.nombre_profesion || "S/Profesion"}</Text>
-        
+
         {isActivo ? (
           <Text style={[styles.jobState, styles.acceptedState]}>Trabajo Activo</Text>
         ) : (
-          <Text style={styles.jobState}>Estado: {trabajo.estado?.descripcion || "No definido"}</Text>
+          <Text style={styles.jobState}>Estado: {estadoTexto}</Text>
         )}
 
-        <Text numberOfLines={2} style={styles.jobDescription}>{item.descripcion}</Text>
+        <Text numberOfLines={2} style={styles.jobDescription}>{trabajo.descripcion ?? ""}</Text>
         <Text style={styles.jobLocation}>Ubicación: {ubicacion}</Text>
 
         {isActivo ? (
-          <View style={styles.buttonContainer}>
-            <Button title="Chat" onPress={() => handleChatPress(trabajo.id_trabajo)} color="#007AFF"/>
-          </View>
+          <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(trabajo.id_trabajo)}>
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
+            <Text style={styles.chatText}>  Chat</Text>
+          </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={() => nav.navigate("JobDetail", { job: item })}>
+          <TouchableOpacity onPress={() => nav.navigate("JobDetail", { job: trabajo })}>
              <Text style={styles.jobDetailText}>Ver detalles del trabajo</Text>
           </TouchableOpacity>
         )}
@@ -93,9 +98,10 @@ export default function MisPostulacionesScreen() {
       ) : (
       <FlatList
         data={jobs}
-        keyExtractor={(j) => String(j.id_trabajo || j.id)}
+        keyExtractor={(j, idx) => String(j.trabajo?.id_trabajo ?? j.id ?? idx)}
         renderItem={renderJob}
         ListEmptyComponent={<Text style={styles.emptyText}>Aún no te postulaste a ningún trabajo.</Text>}
+        contentContainerStyle={{ paddingBottom: 20 }}
       />
       )}
     </View>
@@ -167,5 +173,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: '#666'
-  }
+  },
+  chatButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0b9d57",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    alignSelf: 'flex-start'
+  },
+  chatText: { color: "#fff", marginLeft: 6, fontWeight: "700" },
 });
