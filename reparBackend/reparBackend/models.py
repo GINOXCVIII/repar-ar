@@ -148,6 +148,6 @@ class TrabajadoresProfesion(models.Model):
         verbose_name_plural = "Profesiones de un trabajador"
         
     def __str__(self):
-        return f"{self.id_trabajador}: {self.id_profesion.nombre_profesion} MN: {self.matricula}"
+        return f"{self.id_trabajador.id_contratador.apellido}, {self.id_trabajador.id_contratador.nombre} (ID: {self.id_trabajador.id_trabajador}) {self.id_profesion.nombre_profesion} MN: {self.matricula}"
 
 

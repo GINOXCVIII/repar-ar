@@ -459,7 +459,23 @@ class TrabajadoresProfesionView(APIView):
             item = get_object_or_404(TrabajadoresProfesion, pk=id)
             serializer = TrabajadoresProfesionSerializer(item)
             return Response(serializer.data)
+        
         items = TrabajadoresProfesion.objects.all()
+        """
+        serializer = TrabajadoresProfesionSerializer(items, many=True)
+        return Response(serializer.data)
+        """
+        
+        # Filtro por id_trabajador
+        id_trabajador = request.query_params.get('id_trabajador')
+        if id_trabajador:
+            items = TrabajadoresProfesion.objects.filter(id_trabajador=id_trabajador)
+            
+        # Filtro por id_profesion
+        id_profesion = request.query_params.get('id_profesion')
+        if id_profesion:
+            items = TrabajadoresProfesion.objects.filter(id_profesion=id_profesion)
+
         serializer = TrabajadoresProfesionSerializer(items, many=True)
         return Response(serializer.data)
 
