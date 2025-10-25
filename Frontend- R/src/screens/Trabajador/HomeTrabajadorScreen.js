@@ -54,10 +54,13 @@ export default function HomeTrabajadorScreen() {
         id_trabajo: selectedJob.id_trabajo,
         id_trabajador: workerProfile.id_trabajador,
       };
+      console.log("Contenido de payload enviado a POST /postulaciones ", payload)
       await api.post('/postulaciones/', payload);
       Alert.alert("Éxito", "Te has postulado correctamente.");
       closeModal();
       await fetchMisPostulaciones(workerProfile.id_trabajador);
+      // Actualización del estado a Esperando confirmación
+      await api.patch(`/trabajos/${payload.id_trabajo}/`, { 'id_estado': 2 })
     } catch (e) {
       console.error("Error al postularse:", e.response?.data || e.message || e);
       const errorMessage = e.response?.data ? JSON.stringify(e.response.data) : (e.message || "Error desconocido");
@@ -72,7 +75,7 @@ export default function HomeTrabajadorScreen() {
   };
 
   const renderJob = ({ item }) => {
-    const zona = item.zona_geografica_trabajo; // Corregido aquí
+    const zona = item.zona_geografica_trabajo; // Corregido aca
     const profesion = item.profesion_requerida;
 
     let ubicacion = "Sin ubicación";
