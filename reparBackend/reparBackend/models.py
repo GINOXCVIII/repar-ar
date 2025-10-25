@@ -103,7 +103,7 @@ class Postulacion(models.Model):
         verbose_name_plural = "Postulaciones"
         
     def __str__(self):
-        return f"{self.id_trabajo} {self.id_trabajador} {self.fecha_postulacion}"
+        return f"{self.id_postulacion} ID Trabajo: {self.id_trabajo.id_trabajo} {self.id_trabajador.id_contratador.apellido} (ID: {self.id_trabajador.id_trabajador}) {self.fecha_postulacion}"
 
 class CalificacionTrabajador(models.Model):
     id_calificacion_trabajador = models.AutoField(primary_key=True)

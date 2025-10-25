@@ -123,7 +123,7 @@ useEffect(() => {
       zona_geografica_contratador: zonaData,
     };
   };
-  console.log("Thalia dice que workerProfile vale: ", workerProfile)
+  // console.log("Thalia dice que workerProfile vale: ", workerProfile)
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Mi Perfil</Text>

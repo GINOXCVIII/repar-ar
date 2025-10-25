@@ -13,7 +13,7 @@ import MisTrabajosScreen from "../screens/Contratador/MisTrabajosScreen";
 import MiPerfilScreen from "../screens/MiPerfilScreen";
 import RegistroTrabajadorScreen from "../screens/RegistroTrabajadorScreen";
 import PostulacionesContratador from "../screens/Contratador/PostulacionesContratador";
-import MisPostulacionesScreen from "../screens/MyPostulationsScreen";
+import MisPostulacionesScreen from "../screens/PostulacionesTrabajador";
 
 import { useAuth } from "../contexts/AuthProvider";
 
