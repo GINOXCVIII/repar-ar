@@ -34,7 +34,11 @@ export default function MisPostulacionesScreen() {
     setLoading(true);
     try {
       const resp = await api.get(`${BASE_URL}/postulaciones/?id_trabajador=${workerProfile.id_trabajador}`);
-      setJobs(resp.data || []);
+      const postulaciones = resp.data || [];
+      
+      postulaciones.sort((a, b) => new Date(b.fecha_postulacion) - new Date(a.fecha_postulacion));
+      
+      setJobs(postulaciones);
     } catch (e) {
       console.error("Error cargando mis postulacioness:", e);
       setJobs([]);
@@ -85,9 +89,9 @@ export default function MisPostulacionesScreen() {
     
     let newEstadoId;
     if (current_estado === 3) {
-      newEstadoId = 4; 
+      newEstadoId = 4;
     } else if (current_estado === 4) {
-      newEstadoId = 5; 
+      newEstadoId = 5;
     } else {
       Alert.alert("Error", "Este trabajo no se puede calificar en este estado.");
       setIsSubmittingRating(false);
