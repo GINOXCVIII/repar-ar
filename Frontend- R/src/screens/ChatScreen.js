@@ -1,4 +1,3 @@
-// src/screens/ChatScreen.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -29,43 +28,60 @@ export default function ChatScreen({ route }) {
 
   useEffect(() => {
     if (!trabajoId) return;
-    initChat();
+    const unsubscribe = initChat(); 
+
+   
+    return () => {
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, [trabajoId]);
 
-  // 🔹 Carga info del trabajo desde el backend y configura listener de mensajes
-  const initChat = async () => {
+  const initChat = () => { 
+    setLoading(true); 
+    let unsubscribe = () => {};
+
+
     try {
-      const tRes = await axios.get(`${BASE_URL}/trabajos/${trabajoId}/`);
-      const trabajo = tRes.data;
-
-      const id_trabajador = trabajo.id_trabajador;
-      const id_contratador = trabajo.id_contratador;
-
-      setChatInfo({ id_trabajador, id_contratador });
-
-      // Escucha en tiempo real los mensajes de este trabajo
       const q = query(
         collection(db, "mensajes"),
         where("id_trabajo", "==", trabajoId),
         orderBy("fecha", "asc")
       );
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      unsubscribe = onSnapshot(q, (snapshot) => {
         const msgs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        console.log("Mensajes recibidos de Firestore:", msgs); 
         setMessages(msgs);
         setLoading(false);
+      },
+      (error) => { 
+        console.error("Error al escuchar mensajes de Firestore:", error);
+        setLoading(false);
+    
       });
 
-      return () => unsubscribe();
+
+      axios.get(`${BASE_URL}/trabajos/${trabajoId}/`).then(tRes => {
+         const trabajo = tRes.data;
+         const id_trabajador = trabajo.id_trabajador;
+         const id_contratador = trabajo.id_contratador;
+         setChatInfo({ id_trabajador, id_contratador });
+      }).catch(err => {
+         console.error("Error cargando datos del trabajo:", err);
+      });
+
+
     } catch (err) {
-      console.error("Error cargando datos del trabajo:", err);
-      setLoading(false);
+       console.error("Error configurando la consulta de Firestore:", err);
+       setLoading(false);
     }
+    return unsubscribe;
   };
 
-  // 🔹 Enviar mensaje
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !firebaseUser) return;
     try {
       await addDoc(collection(db, "mensajes"), {
         id_trabajo: trabajoId,
@@ -80,10 +96,10 @@ export default function ChatScreen({ route }) {
   };
 
   const renderMessage = ({ item }) => {
-    const isOwn = item.emisor_uid === firebaseUser.uid;
+    const isOwn = item.emisor_uid === firebaseUser?.uid;
     return (
       <View style={[styles.msgBubble, isOwn ? styles.myMsg : styles.otherMsg]}>
-        <Text style={styles.msgText}>{item.texto}</Text>
+        <Text style={[styles.msgText, !isOwn && styles.otherMsgText]}>{item.texto}</Text>
       </View>
     );
   };
@@ -92,7 +108,7 @@ export default function ChatScreen({ route }) {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={80}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
       <View style={styles.header}>
         <Ionicons name="chatbubbles-outline" size={24} color="#fff" />
@@ -134,13 +150,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#0b9d57",
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    paddingTop: Platform.OS === 'android' ? 25 : 10,
   },
   headerText: { color: "#fff", fontSize: 18, fontWeight: "700", marginLeft: 8 },
   msgBubble: {
     marginVertical: 6,
-    padding: 10,
-    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 15,
     maxWidth: "80%",
   },
   myMsg: {
@@ -151,13 +170,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#e0e0e0",
     alignSelf: "flex-start",
   },
-  msgText: { color: "#fff" },
+  msgText: {
+    color: "#fff",
+    fontSize: 15,
+   },
+  otherMsgText: {
+      color: "#333",
+  },
   inputContainer: {
     flexDirection: "row",
     padding: 10,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#ddd",
+    alignItems: 'center',
   },
   input: {
     flex: 1,
@@ -165,14 +191,15 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 20,
     paddingHorizontal: 15,
-    paddingVertical: 6,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    marginRight: 10,
   },
   sendButton: {
     backgroundColor: "#0b9d57",
-    borderRadius: 20,
-    marginLeft: 10,
-    padding: 10,
+    borderRadius: 25,
+    padding: 12,
     justifyContent: "center",
     alignItems: "center",
   },
 });
+

@@ -1,4 +1,3 @@
-// src/screens/Contratador/MisTrabajosScreen.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -8,10 +7,12 @@ import {
   Alert,
   StyleSheet,
   TouchableOpacity,
+  Button 
 } from "react-native";
-import api from "../../api/api"; // usa tu instancia axios ya configurada
+import api from "../../api/api";
 import { useAuth } from "../../contexts/AuthProvider";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons"; 
 
 export default function MisTrabajosScreen() {
   const { firebaseUser } = useAuth();
@@ -25,7 +26,6 @@ export default function MisTrabajosScreen() {
     if (isFocused) {
       cargarMisTrabajos();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused, firebaseUser]);
 
   const cargarMisTrabajos = async () => {
@@ -38,7 +38,6 @@ export default function MisTrabajosScreen() {
         return;
       }
 
-      // 1) Obtener contratador por firebase_uid
       const respContr = await api.get(`/contratadores/?firebase_uid=${firebaseUser.uid}`);
       const contratadores = Array.isArray(respContr.data) ? respContr.data : [];
 
@@ -52,8 +51,6 @@ export default function MisTrabajosScreen() {
 
       const miContratador = contratadores[0];
       setContratador(miContratador);
-
-      // 2) Extraer id_contratador
       const idContratador = miContratador.id_contratador ?? miContratador.id ?? null;
 
       if (!idContratador && idContratador !== 0) {
@@ -63,7 +60,6 @@ export default function MisTrabajosScreen() {
         return;
       }
 
-      // 3) Intentar pedir trabajos filtrados por backend
       try {
         const respTrabajosFiltro = await api.get(`/trabajos/?id_contratador=${idContratador}`);
         const trabajosFiltradosPorBackend = Array.isArray(respTrabajosFiltro.data)
@@ -85,7 +81,6 @@ export default function MisTrabajosScreen() {
         );
       }
 
-      // 4) Fallback local
       try {
         const respAll = await api.get("/trabajos/");
         const todos = Array.isArray(respAll.data) ? respAll.data : [];
@@ -120,14 +115,23 @@ export default function MisTrabajosScreen() {
     return false;
   };
 
+   const handleChatPress = (jobId) => {
+     if (!jobId) {
+       Alert.alert("Error", "No se encontró el id del trabajo para abrir el chat.");
+       return;
+     }
+     navigation.navigate("Chat", { trabajoId: jobId });
+   };
+
   const renderItem = ({ item }) => {
-    const titulo = item.titulo ?? item.title ?? "Sin título";
+    const titulo = item.titulo ?? "Sin título";
     const descripcion = item.descripcion ?? "";
-    const profesion = item.profesion_requerida?.nombre_profesion ?? item.profesion_requerida?.nombre ?? "No especificada";
-    const ciudad = item.zona_geografica_trabajo?.ciudad ?? item.zona_geografica_trabajo?.nombre ?? "-";
+    const profesion = item.profesion_requerida?.nombre_profesion ?? "No especificada";
+    const ciudad = item.zona_geografica_trabajo?.ciudad ?? "-";
     const provincia = item.zona_geografica_trabajo?.provincia ?? "-";
     const estado = item.estado?.descripcion ?? "-";
-    const idEstado = item.id_estado ?? item.estado?.id_estado ?? null;
+    const idEstado = item.estado?.id_estado ?? null; 
+    const isActivo = idEstado === 3;
 
     return (
       <View style={styles.card}>
@@ -140,10 +144,14 @@ export default function MisTrabajosScreen() {
         </View>
 
         <View style={styles.rowBottom}>
-          <Text style={styles.estado}>Estado: {estado}</Text>
+          <Text style={isActivo ? [styles.estado, styles.estadoActivo] : styles.estado}>Estado: {estado}</Text>
 
-          {/* ✅ solo mostrar el botón si el estado es 1 o 2 */}
-          {(idEstado === 1 || idEstado === 2) && (
+          {isActivo ? (
+            <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(item.id_trabajo)}>
+               <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
+               <Text style={styles.chatButtonText}>Chat</Text>
+            </TouchableOpacity>
+          ) : (idEstado === 1 || idEstado === 2) ? (
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate("PostulacionesContratador", { trabajoId: item.id_trabajo })
@@ -151,6 +159,8 @@ export default function MisTrabajosScreen() {
             >
               <Text style={styles.link}>Ver postulantes</Text>
             </TouchableOpacity>
+          ) : (
+             null
           )}
         </View>
       </View>
@@ -159,7 +169,7 @@ export default function MisTrabajosScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Mis Trabajos</Text>
+      <Text style={styles.header}>Mis Trabajos Publicados</Text>
 
       {loading ? (
         <ActivityIndicator size="large" color="#0b9d57" style={{ marginTop: 20 }} />
@@ -170,7 +180,7 @@ export default function MisTrabajosScreen() {
       ) : (
         <FlatList
           data={trabajos}
-          keyExtractor={(item, idx) => String(item.id_trabajo ?? item.id ?? idx)}
+          keyExtractor={(item, idx) => String(item.id_trabajo ?? idx)}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 12 }}
         />
@@ -203,8 +213,22 @@ const styles = StyleSheet.create({
   titulo: { fontSize: 16, fontWeight: "700", color: "#006400" },
   descripcion: { marginTop: 8, color: "#333" },
   row: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
-  info: { color: "#0b9d57", fontWeight: "600" },
+  info: { color: "#0b9d57", fontWeight: "600", fontSize: 13 },
   rowBottom: { marginTop: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  estado: { color: "#006400", fontWeight: "600" },
-  link: { color: "#0b9d57", fontWeight: "700" },
+  estado: { color: "#555", fontWeight: "600", fontSize: 13 },
+  estadoActivo: { color: '#28a745', fontWeight: 'bold' },
+  link: { color: "#007AFF", fontWeight: "700" },
+  chatButton: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  chatButtonText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontWeight: 'bold',
+  }
 });
