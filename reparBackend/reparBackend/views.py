@@ -180,10 +180,21 @@ class TrabajadorView(APIView):
             item = get_object_or_404(Trabajador, pk=id)
             serializer = TrabajadorSerializer(item)
             return Response(serializer.data)
+        """
         items = Trabajador.objects.all()
         serializer = TrabajadorSerializer(items, many=True)
         return Response(serializer.data)
+        """
+        
+        id_contratador = request.query_params.get('id_contratador')
+        if id_contratador:
+            items = Trabajador.objects.filter(id_contratador=id_contratador)
+        else:
+            items = Trabajador.objects.all()
 
+        serializer = TrabajadorSerializer(items, many=True)
+        return Response(serializer.data)
+        
     def post(self, request):
         serializer = TrabajadorSerializer(data=request.data)
         if serializer.is_valid():

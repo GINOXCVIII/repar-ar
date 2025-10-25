@@ -123,7 +123,7 @@ useEffect(() => {
       zona_geografica_contratador: zonaData,
     };
   };
-
+  console.log("Thalia dice que workerProfile vale: ", workerProfile)
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Mi Perfil</Text>
@@ -161,7 +161,7 @@ useEffect(() => {
         {saving ? <ActivityIndicator /> : <Button title="Guardar perfil" color="#228B22" onPress={saveProfile} />}
       </View>
 
-      {workerProfile ? (
+      {workerProfile?.id_trabajador ? (
         <View style={{ marginTop: 10 }}>
           <Button 
             title={roleActive === 'contratador' ? "Cambiar a Perfil Trabajador" : "Cambiar a Perfil Contratador"}
