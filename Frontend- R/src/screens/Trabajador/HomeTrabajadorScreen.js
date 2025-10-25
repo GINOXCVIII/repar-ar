@@ -73,7 +73,7 @@ export default function HomeTrabajadorScreen() {
 
   const renderJob = ({ item }) => {
     const zona = item.zona_geografica_trabajo; // Corregido aquí
-    const profesion = item.id_profesion_requerida;
+    const profesion = item.profesion_requerida;
 
     let ubicacion = "Sin ubicación";
     if (zona && typeof zona === 'object' && (zona.ciudad || zona.provincia)) {
@@ -89,7 +89,8 @@ export default function HomeTrabajadorScreen() {
         style={styles.jobCard}
         onPress={() => openModal(item)}
       >
-        <Text style={styles.jobTitle}>{profesion?.nombre_profesion || "Profesión no especificada"}</Text>
+        <Text style={styles.jobTitle}>{item?.titulo || "Título no especificada"}</Text>
+        <Text style={styles.jobProf}>{profesion?.nombre_profesion || "Profesión no especificada"}</Text>
         <Text numberOfLines={2} style={styles.jobDescription}>{item.descripcion}</Text>
         <Text style={styles.jobLocation}>Ubicación: {ubicacion}</Text>
         {isJobAlreadyApplied ? (
@@ -103,6 +104,8 @@ export default function HomeTrabajadorScreen() {
 
   const yaPostulado = selectedJob && misPostulaciones.some(p => p.trabajo?.id_trabajo === selectedJob.id_trabajo);
   const isAssignedToMe = selectedJob?.estado?.id_estado === 3 && selectedJob?.id_trabajador === workerProfile?.id_trabajador;
+
+  const quienContrata = selectedJob?.contratador?.nombre + " " + selectedJob?.contratador?.apellido + ", DNI " + selectedJob?.contratador?.dni
 
   return (
     <View style={styles.container}>
@@ -129,9 +132,12 @@ export default function HomeTrabajadorScreen() {
           <View style={styles.modalView}>
             {selectedJob && (
               <ScrollView>
-                <Text style={styles.modalJobTitle}>{selectedJob.id_profesion_requerida?.nombre_profesion || "Trabajo"}</Text>
+                <Text style={styles.modalJobTitle}>{selectedJob.titulo || "S/Titulo"}</Text>
+                <Text style={styles.modalJobProf}>{selectedJob.profesion_requerida?.nombre_profesion || "S/Profesion"}</Text>
                 <Text style={styles.modalLabel}>Descripción Completa:</Text>
                 <Text style={styles.modalDescription}>{selectedJob.descripcion}</Text>
+                <Text style={styles.modalLabel}>Contrata:</Text>
+                <Text style={styles.modalDescription}>{quienContrata}</Text>
                 <Text style={styles.modalLabel}>Ubicación:</Text>
                 <Text style={styles.modalText}>
                   {selectedJob.zona_geografica_trabajo && typeof selectedJob.zona_geografica_trabajo === 'object' // Corregido aquí
@@ -206,6 +212,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 4,
   },
+  jobProf: {
+    fontWeight: "700",
+    color: "#005c49ff",
+    fontSize: 14
+  },
   jobDescription: {
     marginTop: 6,
     color: '#333'
@@ -260,6 +271,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     color: '#009879'
+  },
+    modalJobProf: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: "#005c49ff"
   },
   modalLabel: {
     fontWeight: 'bold',
