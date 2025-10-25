@@ -5,7 +5,7 @@ Created on Fri Sep 12 17:18:34 2025
 """
 
 from rest_framework import serializers
-from django.utils import timezone # Importar timezone
+from django.utils import timezone
 
 from .models import CalificacionContratador, CalificacionTrabajador, Contratador, Estado, Postulacion, Profesion, Trabajador, TrabajadoresProfesion, Trabajo, ZonaGeografica
 
@@ -256,7 +256,7 @@ class PostulacionSerializer(serializers.ModelSerializer):
     trabajador = serializers.SerializerMethodField()
     id_trabajo = serializers.IntegerField(write_only=True)
     id_trabajador = serializers.IntegerField(write_only=True)
-    fecha_postulacion = serializers.DateTimeField(read_only=True) # Hacerla de solo lectura
+    fecha_postulacion = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Postulacion
@@ -278,7 +278,7 @@ class PostulacionSerializer(serializers.ModelSerializer):
         postulacion = Postulacion.objects.create(
             id_trabajo_id = id_trabajo,
             id_trabajador_id = id_trabajador,
-            fecha_postulacion=timezone.now(), # Asignar fecha actual al crear
+            fecha_postulacion=timezone.now(),
             **validated_data
             )
         return postulacion
@@ -300,19 +300,60 @@ class PostulacionSerializer(serializers.ModelSerializer):
         return instance
 
 class CalificacionTrabajadorSerializer(serializers.ModelSerializer):
-    id_contratador = ContratadorSerializer(read_only=True)
-    id_trabajador = TrabajadorSerializer(read_only=True)
-    id_trabajo = TrabajoSerializer(read_only=True)
+    id_contratador = serializers.PrimaryKeyRelatedField(
+        queryset=Contratador.objects.all(), write_only=True
+    )
+    id_trabajador = serializers.PrimaryKeyRelatedField(
+        queryset=Trabajador.objects.all(), write_only=True
+    )
+    id_trabajo = serializers.PrimaryKeyRelatedField(
+        queryset=Trabajo.objects.all(), write_only=True
+    )
+    fecha_calificacion = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = CalificacionTrabajador
-        fields = '__all__'
+        fields = (
+            'id_calificacion_trabajador', 'calificacion', 'comentario', 'fecha_calificacion',
+            'id_contratador', 'id_trabajador', 'id_trabajo'
+        )
+    
+    def create(self, validated_data):
+        calificacion = CalificacionTrabajador.objects.create(
+            id_contratador=validated_data.pop('id_contratador'),
+            id_trabajador=validated_data.pop('id_trabajador'),
+            id_trabajo=validated_data.pop('id_trabajo'),
+            fecha_calificacion=timezone.now(),
+            **validated_data
+        )
+        return calificacion
 
 class CalificacionContratadorSerializer(serializers.ModelSerializer):
-    id_contratador = ContratadorSerializer(read_only=True)
-    id_trabajador = TrabajadorSerializer(read_only=True)
-    id_trabajo = TrabajoSerializer(read_only=True)
+    id_contratador = serializers.PrimaryKeyRelatedField(
+        queryset=Contratador.objects.all(), write_only=True
+    )
+    id_trabajador = serializers.PrimaryKeyRelatedField(
+        queryset=Trabajador.objects.all(), write_only=True
+    )
+    id_trabajo = serializers.PrimaryKeyRelatedField(
+        queryset=Trabajo.objects.all(), write_only=True
+    )
+    fecha_calificacion = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = CalificacionContratador
-        fields = '__all__'
+        fields = (
+            'id_calificacion_contratador', 'calificacion', 'comentario', 'fecha_calificacion',
+            'id_contratador', 'id_trabajador', 'id_trabajo'
+        )
+    
+    def create(self, validated_data):
+        calificacion = CalificacionContratador.objects.create(
+            id_contratador=validated_data.pop('id_contratador'),
+            id_trabajador=validated_data.pop('id_trabajador'),
+            id_trabajo=validated_data.pop('id_trabajo'),
+            fecha_calificacion=timezone.now(),
+            **validated_data
+        )
+        return calificacion
+
