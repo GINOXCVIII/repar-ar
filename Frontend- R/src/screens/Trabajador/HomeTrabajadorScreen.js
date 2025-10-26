@@ -1,36 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Modal, Button, Alert, ScrollView } from "react-native";
-import api from "../../api/api";
+import axios from 'axios';
+const BASE_URL = "http://127.0.0.1:8000/api";
+
 import { useIsFocused } from "@react-navigation/native";
 import { useAuth } from "../../contexts/AuthProvider";
 
-export default function HomeTrabajadorScreen() {
-  const { workerProfile, misPostulaciones, fetchMisPostulaciones } = useAuth();
+export default function HomeTrabajadorScreen({ navigation }) {
+  const { workerProfile, misPostulaciones, fetchMisPostulaciones, misProfesiones } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
-  const [postulationUpdateFlag, setPostulationUpdateFlag] = useState(false);
+  const [hasProfessions, setHasProfessions] = useState(true);
   const isFocused = useIsFocused();
 
-  useEffect(() => {
-    if (!isFocused) return;
-    loadOpenJobs();
-  }, [isFocused]);
-
-  const loadOpenJobs = async () => {
+  const loadOpenJobs = useCallback(async () => {
     setLoading(true);
+    setJobs([]);
+    setHasProfessions(true);
+
+    if (!workerProfile?.id_trabajador) {
+        console.log("Perfil de trabajador no cargado aún.");
+        setLoading(false);
+        return;
+    }
+
+    const safeMisProfesiones = Array.isArray(misProfesiones) ? misProfesiones : [];
+    const profesionIds = safeMisProfesiones.map(tp => tp.id_profesion).filter(id => id != null);
+
+    if (profesionIds.length === 0) {
+        console.log("El trabajador no tiene profesiones seleccionadas.");
+        setHasProfessions(false);
+        setLoading(false);
+        return;
+    }
+
+    const profesionIdsString = profesionIds.join(',');
+    const url = `${BASE_URL}/trabajos/?id_estado=1&profesiones=${profesionIdsString}`;
+    console.log("Cargando trabajos desde:", url);
+
     try {
-      const resp = await api.get(`/trabajos/?id_estado=1`);
+      const resp = await axios.get(url);
       setJobs(resp.data || []);
     } catch (e) {
-      console.error("Error cargando trabajos abiertos:", e);
+      console.error("Error cargando trabajos filtrados:", e.response?.data || e.message || e);
       setJobs([]);
+      Alert.alert("Error", "No se pudieron cargar las ofertas de trabajo.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [workerProfile?.id_trabajador, misProfesiones]);
+
+  useEffect(() => {
+    if (isFocused) {
+      loadOpenJobs();
+    }
+  }, [isFocused, loadOpenJobs]);
 
   const openModal = (job) => {
     setSelectedJob(job);
@@ -43,11 +70,11 @@ export default function HomeTrabajadorScreen() {
   };
 
   const handlePostulate = async () => {
-    if (!workerProfile || !workerProfile.id_trabajador) {
-      Alert.alert("Error", "No se encontró tu perfil de trabajador.");
+    if (!workerProfile?.id_trabajador) {
+      Alert.alert("Error", "Perfil de trabajador no disponible.");
       return;
     }
-    if (!selectedJob) return;
+    if (!selectedJob?.id_trabajo) return;
 
     setIsPosting(true);
     try {
@@ -55,19 +82,29 @@ export default function HomeTrabajadorScreen() {
         id_trabajo: selectedJob.id_trabajo,
         id_trabajador: workerProfile.id_trabajador,
       };
-      console.log("payload", payload)
-      await api.post('/postulaciones/', payload);
-      Alert.alert("Éxito", "Te has postulado correctamente.");
-      closeModal();
+      console.log("Intentando postular con payload:", payload);
+
+      await axios.post(`${BASE_URL}/postulaciones/`, payload);
+
+      const nuevoEstadoId = 2;
+      await axios.patch(`${BASE_URL}/trabajos/${selectedJob.id_trabajo}/`, { id_estado: nuevoEstadoId });
+
+      Alert.alert("Éxito", "Te has postulado correctamente. El estado del trabajo ha sido actualizado.");
+
       await fetchMisPostulaciones(workerProfile.id_trabajador);
-      setPostulationUpdateFlag(prev => !prev);
-      // Actualización del estado a Esperando confirmación
-      const nuevoEstado = 2;
-      await api.patch(`/trabajos/${payload.id_trabajo}/`, { 'id_estado': nuevoEstado })
+      await loadOpenJobs();
+
+      closeModal();
+
     } catch (e) {
-      console.error("Error al postularse:", e.response?.data || e.message || e);
-      const errorMessage = e.response?.data ? JSON.stringify(e.response.data) : (e.message || "Error desconocido");
-      Alert.alert("Error al Postularse", `No se pudo completar la postulación.\nDetalle: ${errorMessage}`);
+      console.error("Error al postularse o actualizar estado:", e.response?.data || e.message || e);
+      let errorMessage = "No se pudo completar la postulación.";
+      if (e.response?.data) {
+          errorMessage += `\nDetalle: ${JSON.stringify(e.response.data)}`;
+      } else if (e.message) {
+          errorMessage += `\nDetalle: ${e.message}`;
+      }
+      Alert.alert("Error al Postularse", errorMessage);
     } finally {
       setIsPosting(false);
     }
@@ -75,60 +112,142 @@ export default function HomeTrabajadorScreen() {
 
   const handleChatPress = (jobId) => {
     console.log("Abrir chat para trabajo ID:", jobId);
+    Alert.alert("Chat", "Funcionalidad de chat aún no implementada.");
   };
 
   const renderJob = ({ item }) => {
     const zona = item.zona_geografica_trabajo;
     const profesion = item.profesion_requerida;
 
-    let ubicacion = "Sin ubicación";
-    if (zona && typeof zona === 'object' && (zona.ciudad || zona.provincia)) {
-       const ciudad = zona.ciudad || "";
-       const provincia = zona.provincia || "";
-       ubicacion = [ciudad, provincia].filter(Boolean).join(", ");
+    let ubicacion = "Sin ubicación especificada";
+    if (zona && typeof zona === 'object') {
+       const partes = [zona.ciudad, zona.provincia].filter(Boolean);
+       if (partes.length > 0) {
+           ubicacion = partes.join(", ");
+       }
     }
 
-    const isJobAlreadyApplied = misPostulaciones.some(p => p.trabajo?.id_trabajo === item.id_trabajo);
+    const isJobAlreadyApplied = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.id_trabajo === item.id_trabajo);
 
     return (
       <TouchableOpacity
         style={styles.jobCard}
         onPress={() => openModal(item)}
+        activeOpacity={0.7}
       >
-        <Text style={styles.jobTitle}>{item?.titulo || "Título no especificada"}</Text>
-        <Text style={styles.jobProf}>{profesion?.nombre_profesion || "Profesión no especificada"}</Text>
-        <Text numberOfLines={2} style={styles.jobDescription}>{item.descripcion}</Text>
+        <Text style={styles.jobTitle}>{item?.titulo || "Título no disponible"}</Text>
+        <Text style={styles.jobProf}>{profesion?.nombre_profesion || "Profesión no disponible"}</Text>
+        <Text numberOfLines={2} style={styles.jobDescription}>{item.descripcion || "Sin descripción."}</Text>
         <Text style={styles.jobLocation}>Ubicación: {ubicacion}</Text>
         {isJobAlreadyApplied ? (
-            <Text style={styles.appliedJobText}>Ya postulado, esperando devolución.</Text>
+            <Text style={styles.appliedJobText}>Ya postulado</Text>
         ) : (
-            <Text style={styles.jobDetailText}>Ver detalles</Text>
+            <Text style={styles.jobDetailText}>Toca para ver detalles y postularte</Text>
         )}
       </TouchableOpacity>
     );
   };
 
-  const yaPostulado = selectedJob && misPostulaciones.some(p => p.trabajo?.id_trabajo === selectedJob.id_trabajo);
-  const isAssignedToMe = selectedJob?.estado?.id_estado === 3 && selectedJob?.id_trabajador === workerProfile?.id_trabajador;
-  
-  const quienContrata = selectedJob?.contratador?.nombre ? 
-    `${selectedJob.contratador.nombre} ${selectedJob.contratador.apellido || ''}, DNI ${selectedJob.contratador.dni || ''}`
-    : "No especificado";
+  const renderModalContent = () => {
+     if (!selectedJob) return null;
+
+     const yaPostulado = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.id_trabajo === selectedJob.id_trabajo);
+     const isAssignedToMe = selectedJob?.estado?.id_estado === 3 && selectedJob?.id_trabajador === workerProfile?.id_trabajador;
+
+     let quienContrata = "No especificado";
+     if (selectedJob?.contratador) {
+          const c = selectedJob.contratador;
+          quienContrata = [c.nombre, c.apellido].filter(Boolean).join(" ");
+          if (c.dni) quienContrata += `, DNI ${c.dni}`;
+     }
+     let ubicacionCompleta = "No especificada";
+     if (selectedJob?.zona_geografica_trabajo && typeof selectedJob.zona_geografica_trabajo === 'object') {
+          const z = selectedJob.zona_geografica_trabajo;
+          ubicacionCompleta = [z.calle, z.ciudad, z.provincia].filter(Boolean).join(", ");
+     }
+     const fechaPublicacion = selectedJob?.fecha_creacion ? new Date(selectedJob.fecha_creacion).toLocaleDateString() : 'N/A';
+
+     return (
+          <ScrollView>
+                <Text style={styles.modalJobTitle}>{selectedJob.titulo || "S/Titulo"}</Text>
+                <Text style={styles.modalJobProf}>{selectedJob.profesion_requerida?.nombre_profesion || "S/Profesion"}</Text>
+
+                <Text style={styles.modalLabel}>Descripción Completa:</Text>
+                <Text style={styles.modalDescription}>{selectedJob.descripcion || "No disponible."}</Text>
+
+                <Text style={styles.modalLabel}>Contratador:</Text>
+                <Text style={styles.modalText}>{quienContrata}</Text>
+
+                <Text style={styles.modalLabel}>Ubicación Completa:</Text>
+                <Text style={styles.modalText}>{ubicacionCompleta}</Text>
+
+                <Text style={styles.modalLabel}>Fecha de Publicación:</Text>
+                <Text style={styles.modalText}>{fechaPublicacion}</Text>
+
+                {isAssignedToMe ? (
+                    <>
+                    <Text style={[styles.jobState, styles.acceptedState, {textAlign: 'center', marginVertical: 15}]}>¡Este trabajo te fue asignado!</Text>
+                    <View style={styles.modalButtonContainer}>
+                        <Button title="Ir al Chat" onPress={() => handleChatPress(selectedJob.id_trabajo)} color="#007AFF"/>
+                        <View style={{marginTop: 10}}>
+                        <Button title="Cerrar" onPress={closeModal} color="#6c757d"/>
+                        </View>
+                    </View>
+                    </>
+                ) : yaPostulado ? (
+                    <>
+                    <Text style={styles.alreadyAppliedText}>Ya te has postulado. Esperando confirmación del contratador.</Text>
+                    <View style={{marginTop: 15}}>
+                        <Button title="Cerrar" onPress={closeModal} color="#6c757d"/>
+                    </View>
+                    </>
+                ) : (
+                    <View style={styles.modalButtonContainer}>
+                    {isPosting ? (
+                        <ActivityIndicator color="#007AFF" size="large" />
+                    ) : (
+                        <Button title="Confirmar Postulación" onPress={handlePostulate} color="#28a745" />
+                    )}
+                    <View style={{marginTop: 10}}>
+                        <Button title="Cancelar" onPress={closeModal} color="#dc3545" disabled={isPosting}/>
+                    </View>
+                    </View>
+                )}
+          </ScrollView>
+     );
+  };
 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>Ofertas de Trabajo Disponibles</Text>
+      <Text style={styles.headerTitle}>Ofertas de Trabajo para ti</Text>
+
       {loading ? (
-        <ActivityIndicator color="#009879" size="large" style={{ marginTop: 20 }}/>
+        <ActivityIndicator color="#009879" size="large" style={{ marginTop: 50 }}/>
       ) : (
-        <FlatList
-          data={jobs}
-          keyExtractor={(j) => String(j.id_trabajo || j.id)}
-          renderItem={renderJob}
-          ListEmptyComponent={<Text style={styles.emptyText}>No hay trabajos abiertos disponibles.</Text>}
-          extraData={{misPostulaciones, postulationUpdateFlag}}
-        />
+        !hasProfessions ? (
+             <View style={styles.centeredMessageContainer}>
+                 <Text style={styles.emptyText}>No has seleccionado ninguna profesión en tu perfil.</Text>
+                 <Button
+                    title="Ir a Mi Perfil para agregar profesiones"
+                    onPress={() => navigation.navigate('MiPerfil')}
+                    color="#007AFF"
+                 />
+             </View>
+        ) : (
+          <FlatList
+            data={jobs}
+            keyExtractor={(j) => j.id_trabajo.toString()}
+            renderItem={renderJob}
+            ListEmptyComponent={
+                 <View style={styles.centeredMessageContainer}>
+                    <Text style={styles.emptyText}>No hay trabajos disponibles que coincidan con tus profesiones.</Text>
+                 </View>
+            }
+            extraData={misPostulaciones}
+            ListFooterComponent={<View style={{ height: 20 }} />}
+          />
+        )
       )}
 
       <Modal
@@ -139,54 +258,7 @@ export default function HomeTrabajadorScreen() {
       >
         <View style={styles.modalCenteredView}>
           <View style={styles.modalView}>
-            {selectedJob && (
-              <ScrollView>
-                <Text style={styles.modalJobTitle}>{selectedJob.titulo || "S/Titulo"}</Text>
-                <Text style={styles.modalJobProf}>{selectedJob.profesion_requerida?.nombre_profesion || "S/Profesion"}</Text>
-                <Text style={styles.modalLabel}>Descripción Completa:</Text>
-                <Text style={styles.modalDescription}>{selectedJob.descripcion}</Text>
-                <Text style={styles.modalLabel}>Contrata:</Text>
-                <Text style={styles.modalDescription}>{quienContrata}</Text>
-                <Text style={styles.modalLabel}>Ubicación:</Text>
-                <Text style={styles.modalText}>
-                  {selectedJob.zona_geografica_trabajo && typeof selectedJob.zona_geografica_trabajo === 'object'
-                    ? `${selectedJob.zona_geografica_trabajo.calle || ''}, ${selectedJob.zona_geografica_trabajo.ciudad || ''}, ${selectedJob.zona_geografica_trabajo.provincia || ''}`
-                    : "No especificada"}
-                </Text>
-                <Text style={styles.modalLabel}>Fecha de Publicación:</Text>
-                <Text style={styles.modalText}>{new Date(selectedJob.fecha_creacion).toLocaleDateString()}</Text>
-
-                {isAssignedToMe ? (
-                  <>
-                    <Text style={[styles.jobState, styles.acceptedState, {textAlign: 'center', marginBottom: 10}]}>Trabajo Asignado</Text>
-                    <View style={styles.modalButtonContainer}>
-                      <Button title="Chat" onPress={() => handleChatPress(selectedJob.id_trabajo)} color="#007AFF"/>
-                      <View style={{marginTop: 10}}>
-                        <Button title="Cerrar" onPress={closeModal} color="#666"/>
-                      </View>
-                    </View>
-                  </>
-                ) : yaPostulado ? (
-                  <>
-                    <Text style={styles.alreadyAppliedText}>Ya postulado, esperando devolución.</Text>
-                    <View style={{marginTop: 10}}>
-                        <Button title="Cerrar" onPress={closeModal} color="#666"/>
-                    </View>
-                  </>
-                ) : (
-                  <View style={styles.modalButtonContainer}>
-                    {isPosting ? (
-                       <ActivityIndicator color="#007AFF" />
-                    ) : (
-                      <Button title="Postularse" onPress={handlePostulate} disabled={isPosting}/>
-                    )}
-                    <View style={{marginTop: 10}}>
-                       <Button title="Cancelar" onPress={closeModal} color="#FF3B30" disabled={isPosting}/>
-                    </View>
-                  </View>
-                )}
-              </ScrollView>
-            )}
+              {renderModalContent()}
           </View>
         </View>
       </Modal>
@@ -201,125 +273,152 @@ const styles = StyleSheet.create({
     backgroundColor: "#f3fbf7"
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#009879",
-    marginBottom: 12,
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#007A5E",
+    marginBottom: 16,
     textAlign: 'center'
   },
   jobCard: {
-    backgroundColor: "#fff",
-    padding: 16,
-    marginBottom: 10,
-    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    padding: 18,
+    marginBottom: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ddd'
+    borderColor: '#e0e0e0',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   jobTitle: {
-    fontWeight: "700",
-    color: "#009879",
-    fontSize: 16,
-    marginBottom: 4,
+    fontWeight: "bold",
+    color: "#005c49",
+    fontSize: 17,
+    marginBottom: 5,
   },
   jobProf: {
-    fontWeight: "700",
-    color: "#005c49ff",
-    fontSize: 14
+    fontWeight: "600",
+    color: "#007A5E",
+    fontSize: 15,
+    marginBottom: 8,
   },
   jobDescription: {
-    marginTop: 6,
-    color: '#333'
+    color: '#444',
+    fontSize: 14,
+    lineHeight: 20,
   },
   jobLocation: {
     color: "#666",
-    marginTop: 10,
-    fontSize: 12
+    marginTop: 12,
+    fontSize: 13,
+    fontStyle: 'italic',
   },
   jobDetailText: {
     color: "#007AFF",
-    marginTop: 8,
-    fontWeight: '600'
+    marginTop: 10,
+    fontWeight: '600',
+    fontSize: 14,
   },
   appliedJobText: {
-    color: '#555',
-    marginTop: 8,
+    color: '#6c757d',
+    marginTop: 10,
     fontStyle: 'italic',
-    fontWeight: '500'
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  centeredMessageContainer: {
+     flex: 1,
+     justifyContent: 'center',
+     alignItems: 'center',
+     paddingHorizontal: 20,
   },
   emptyText: {
     textAlign: 'center',
-    marginTop: 20,
-    color: '#666'
+    marginTop: 30,
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 20,
   },
   modalCenteredView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "stretch",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '85%',
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 25,
+    paddingTop: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5,
   },
   modalJobTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 8,
     textAlign: 'center',
-    color: '#009879'
+    color: '#007A5E'
   },
-    modalJobProf: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 15,
+  modalJobProf: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 20,
     textAlign: 'center',
-    color: "#005c49ff"
+    color: "#005c49"
   },
   modalLabel: {
     fontWeight: 'bold',
-    marginTop: 10,
-    color: '#555'
+    fontSize: 15,
+    marginTop: 12,
+    color: '#333',
+    marginBottom: 3,
   },
   modalDescription: {
+    fontSize: 15,
     marginBottom: 10,
-    textAlign: 'justify',
-    color: '#333'
+    textAlign: 'left',
+    color: '#444',
+    lineHeight: 22,
   },
   modalText: {
+    fontSize: 15,
     marginBottom: 10,
-    color: '#333'
+    color: '#444',
   },
   modalButtonContainer: {
-    marginTop: 20,
+    marginTop: 25,
+    paddingTop: 15,
+    borderTopColor: '#e0e0e0',
+    borderTopWidth: 1,
   },
   alreadyAppliedText: {
       marginTop: 20,
       textAlign: 'center',
       fontStyle: 'italic',
-      color: '#666'
+      fontSize: 15,
+      color: '#555'
   },
   jobState: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#888',
-    marginTop: 4,
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingVertical: 8,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   acceptedState: {
-      color: '#28a745',
-      fontWeight: 'bold',
+      backgroundColor: '#d4edda',
+      color: '#155724',
+      borderColor: '#c3e6cb',
+      borderWidth: 1,
   },
 });
 
