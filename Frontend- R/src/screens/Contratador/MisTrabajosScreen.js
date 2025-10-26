@@ -1,3 +1,4 @@
+// src/screens/Contratador/MisTrabajosScreen.js
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -31,6 +32,11 @@ export default function MisTrabajosScreen() {
   const [comment, setComment] = useState("");
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
+  // 🔴 NUEVO: Modal de cancelación
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [selectedJobToCancel, setSelectedJobToCancel] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+
   useEffect(() => {
     if (isFocused && firebaseUser) {
       cargarMisTrabajos();
@@ -60,26 +66,13 @@ export default function MisTrabajosScreen() {
     }
   };
 
-  // No se usa. borrar?
-  const compararIdContratador = (trabajo, idContratadorEsperado) => {
-    if (trabajo == null) return false;
-    if (trabajo.id_contratador !== undefined && trabajo.id_contratador !== null) {
-      return String(trabajo.id_contratador) === String(idContratadorEsperado);
-    }
-    if (trabajo.contratador && (trabajo.contratador.id_contratador !== undefined || trabajo.contratador.id !== undefined)) {
-      const nested = trabajo.contratador.id_contratador ?? trabajo.contratador.id;
-      return String(nested) === String(idContratadorEsperado);
-    }
-    return false;
-  };
-  
   const handleChatPress = (item) => {
-    const chatId = item.id_trabajo; 
+    const chatId = item.id_trabajo;
     if (!chatId) {
-       Alert.alert("Error", "No se encontró el id del trabajo para abrir el chat.");
-       return;
-     }
-     navigation.navigate("Chat", { chatId: chatId });
+      Alert.alert("Error", "No se encontró el id del trabajo para abrir el chat.");
+      return;
+    }
+    navigation.navigate("Chat", { chatId: chatId });
   };
 
   const openRatingModal = (job) => {
@@ -102,7 +95,7 @@ export default function MisTrabajosScreen() {
     if (!selectedJobToRate || !profile) return;
 
     setIsSubmittingRating(true);
-    
+
     const id_trabajo = selectedJobToRate.id_trabajo;
     const id_trabajador = selectedJobToRate.trabajador?.id_trabajador;
     const id_contratador = profile.id_contratador;
@@ -133,7 +126,7 @@ export default function MisTrabajosScreen() {
         calificacion: rating,
         comentario: comment,
       };
-      
+
       await api.post('/calificaciones/calificaciones-trabajadores/', ratingPayload);
 
       const jobUpdatePayload = {
@@ -153,24 +146,40 @@ export default function MisTrabajosScreen() {
     }
   };
 
-  const renderStars = () => {
-    return (
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Pressable key={star} onPress={() => setRating(star)}>
-            <Ionicons
-              name={rating >= star ? "star" : "star-outline"}
-              size={32}
-              color="#f1c40f"
-            />
-          </Pressable>
-        ))}
-      </View>
-    );
+  // ⭐ NUEVO: abrir modal de cancelación
+  const openCancelModal = (job) => {
+    setSelectedJobToCancel(job);
+    setCancelModalVisible(true);
   };
 
+  // ⭐ NUEVO: cancelar trabajo
+  const handleCancelJob = async () => {
+    if (!selectedJobToCancel) return;
+    setIsCancelling(true);
+    try {
+      await api.patch(`/trabajos/${selectedJobToCancel.id_trabajo}/`, { id_estado: 6 });
+      setCancelModalVisible(false);
+      Alert.alert("Trabajo cancelado", "El trabajo fue cancelado exitosamente.");
+      cargarMisTrabajos();
+    } catch (err) {
+      console.error("Error al cancelar trabajo:", err.response?.data || err);
+      Alert.alert("Error", "No se pudo cancelar el trabajo.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const renderStars = () => (
+    <View style={styles.starsContainer}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Pressable key={star} onPress={() => setRating(star)}>
+          <Ionicons name={rating >= star ? "star" : "star-outline"} size={32} color="#f1c40f" />
+        </Pressable>
+      ))}
+    </View>
+  );
+
   const renderItem = ({ item }) => {
-    // console.log("contenido de item: ", item, item.id_trabajo);
     const titulo = item.titulo ?? "Sin título";
     const profesion = item.profesion_requerida?.nombre_profesion ?? "No especificada";
     const ciudad = item.zona_geografica_trabajo?.ciudad ?? "-";
@@ -178,29 +187,40 @@ export default function MisTrabajosScreen() {
     const estado = item.estado?.descripcion ?? "-";
     const idEstado = item.estado?.id_estado ?? null;
     const isActivo = idEstado === 3;
-    const idTrabajo = item.id_trabajo
+    const idTrabajo = item.id_trabajo;
 
     return (
       <View style={styles.card}>
         <Text style={styles.titulo}>{titulo}</Text>
         <Text style={styles.info}>{profesion}</Text>
-        <Text style={styles.ubicacion}>{ciudad}{provincia ? `, ${provincia}` : ""}</Text>
-        
+        <Text style={styles.ubicacion}>
+          {ciudad}
+          {provincia ? `, ${provincia}` : ""}
+        </Text>
+
         <View style={styles.rowBottom}>
-          <Text style={isActivo ? [styles.estado, styles.estadoActivo] : styles.estado}>Estado: {estado}</Text>
+          <Text style={isActivo ? [styles.estado, styles.estadoActivo] : styles.estado}>
+            Estado: {estado}
+          </Text>
 
           {isActivo ? (
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(item)}>
-                 <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
-                 <Text style={styles.buttonText}>Chat</Text>
+                <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
+                <Text style={styles.buttonText}>Chat</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.finishButton} onPress={() => openRatingModal(item)}>
-                 <Ionicons name="star-outline" size={18} color="#fff" />
-                 <Text style={styles.buttonText}>Finalizar</Text>
+                <Ionicons name="star-outline" size={18} color="#fff" />
+                <Text style={styles.buttonText}>Finalizar</Text>
               </TouchableOpacity>
             </View>
-          ) : (idEstado === 1 || idEstado === 2) ? (
+          ) : idEstado === 1 ? (
+            // 🔴 Botón cancelar visible solo si id_estado === 1
+            <TouchableOpacity style={styles.cancelButton} onPress={() => openCancelModal(item)}>
+              <Ionicons name="close-circle-outline" size={18} color="#fff" />
+              <Text style={styles.cancelText}>Cancelar oferta de trabajo</Text>
+            </TouchableOpacity>
+          ) : idEstado === 2 ? (
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate("PostulacionesContratador", { trabajoId: idTrabajo })
@@ -208,9 +228,7 @@ export default function MisTrabajosScreen() {
             >
               <Text style={styles.link}>Ver postulantes</Text>
             </TouchableOpacity>
-          ) : (
-             null
-          )}
+          ) : null}
         </View>
       </View>
     );
@@ -224,7 +242,9 @@ export default function MisTrabajosScreen() {
         <ActivityIndicator size="large" color="#0b9d57" style={{ marginTop: 20 }} />
       ) : trabajos.length === 0 ? (
         <View style={{ padding: 20 }}>
-          <Text style={{ textAlign: "center", color: "#666" }}>No tenés trabajos publicados todavía.</Text>
+          <Text style={{ textAlign: "center", color: "#666" }}>
+            No tenés trabajos publicados todavía.
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -236,12 +256,8 @@ export default function MisTrabajosScreen() {
         />
       )}
 
-      <Modal
-        visible={ratingModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={closeRatingModal}
-      >
+      {/* Modal calificación */}
+      <Modal visible={ratingModalVisible} transparent animationType="slide" onRequestClose={closeRatingModal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView>
@@ -265,11 +281,41 @@ export default function MisTrabajosScreen() {
                 ) : (
                   <Button title="Enviar Calificación" onPress={handleRatingSubmit} color="#0b9d57" />
                 )}
-                <View style={{marginTop: 10}}>
+                <View style={{ marginTop: 10 }}>
                   <Button title="Cancelar" onPress={closeRatingModal} color="#888" />
                 </View>
               </View>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 🔴 Modal Confirmar Cancelación */}
+      <Modal transparent visible={cancelModalVisible} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.cancelModalBox}>
+            <Text style={styles.modalTitle}>¿Estás seguro?</Text>
+            <Text style={styles.modalSubtitle}>
+              ¿Deseas cancelar el trabajo "{selectedJobToCancel?.titulo}"?
+            </Text>
+            <View style={styles.cancelModalButtons}>
+              <Pressable
+                style={[styles.modalButtonConfirm, { backgroundColor: "#dc2626" }]}
+                onPress={handleCancelJob}
+              >
+                {isCancelling ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ color: "#fff", fontWeight: "700" }}>Confirmar</Text>
+                )}
+              </Pressable>
+              <Pressable
+                style={[styles.modalButtonConfirm, { backgroundColor: "#6b7280" }]}
+                onPress={() => setCancelModalVisible(false)}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>Cancelar</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -299,89 +345,105 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   titulo: { fontSize: 16, fontWeight: "700", color: "#006400" },
-  descripcion: { marginTop: 8, color: "#333", fontSize: 13, marginBottom: 5 },
-  row: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   info: { color: "#0b9d57", fontWeight: "600", fontSize: 13 },
   ubicacion: { fontSize: 13, color: "#444", marginTop: 4 },
-  rowBottom: { marginTop: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  estado: { color: "#555", fontWeight: "600", fontSize: 13, flex: 1 },
-  estadoActivo: { color: '#28a745', fontWeight: 'bold' },
-  link: { color: "#007AFF", fontWeight: "700" },
-  buttonRow: {
-    flexDirection: 'row',
+  rowBottom: {
+    marginTop: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
+  estado: { color: "#555", fontWeight: "600", fontSize: 13, flex: 1 },
+  estadoActivo: { color: "#28a745", fontWeight: "bold" },
+  link: { color: "#007AFF", fontWeight: "700" },
+  buttonRow: { flexDirection: "row" },
   chatButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#007AFF",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
     marginRight: 8,
   },
   finishButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1c40f',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1c40f",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
   },
-  buttonText: {
-    color: '#fff',
-    marginLeft: 5,
-    fontWeight: 'bold',
-    fontSize: 13,
+  cancelButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#dc2626",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
   },
-  modalOverlay: { 
-    flex: 1, 
-    backgroundColor: "rgba(0,0,0,0.5)", 
-    justifyContent: "center", 
-    alignItems: "center" 
+  cancelText: { color: "#fff", marginLeft: 6, fontWeight: "bold", fontSize: 13 },
+  buttonText: { color: "#fff", marginLeft: 5, fontWeight: "bold", fontSize: 13 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  modalContent: { 
-    width: "90%", 
-    maxHeight: '80%',
-    backgroundColor: "#fff", 
-    borderRadius: 12, 
-    padding: 20
+  cancelModalBox: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    width: "85%",
+    alignItems: "center",
   },
-  modalTitle: { 
-    fontSize: 18, 
-    fontWeight: "700", 
-    color: "#0b9d57", 
-    textAlign: 'center' 
-  },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: "#111827", textAlign: "center" },
   modalSubtitle: {
-    fontSize: 14,
-    color: '#333',
-    textAlign: 'center',
-    marginTop: 5,
-    marginBottom: 15,
+    fontSize: 15,
+    color: "#333",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  cancelModalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    width: "100%",
+  },
+  modalButtonConfirm: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  modalContent: {
+    width: "90%",
+    maxHeight: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
   },
   modalLabel: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginTop: 10,
     marginBottom: 5,
   },
-  starsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
   commentInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     padding: 10,
     minHeight: 100,
-    textAlignVertical: 'top',
-    backgroundColor: '#f9f9f9',
+    textAlignVertical: "top",
+    backgroundColor: "#f9f9f9",
   },
-  modalButtonContainer: {
-    marginTop: 20,
-  }
+  modalButtonContainer: { marginTop: 20 },
+  starsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
 });
-
