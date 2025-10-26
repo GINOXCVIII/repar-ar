@@ -55,11 +55,15 @@ export default function HomeTrabajadorScreen() {
         id_trabajo: selectedJob.id_trabajo,
         id_trabajador: workerProfile.id_trabajador,
       };
+      console.log("payload", payload)
       await api.post('/postulaciones/', payload);
       Alert.alert("Éxito", "Te has postulado correctamente.");
       closeModal();
       await fetchMisPostulaciones(workerProfile.id_trabajador);
       setPostulationUpdateFlag(prev => !prev);
+      // Actualización del estado a Esperando confirmación
+      const nuevoEstado = 2;
+      await api.patch(`/trabajos/${payload.id_trabajo}/`, { 'id_estado': nuevoEstado })
     } catch (e) {
       console.error("Error al postularse:", e.response?.data || e.message || e);
       const errorMessage = e.response?.data ? JSON.stringify(e.response.data) : (e.message || "Error desconocido");

@@ -18,7 +18,8 @@ import { Ionicons } from "@expo/vector-icons";
 const BASE_URL = "http://127.0.0.1:8000/api";
 
 export default function ChatScreen({ route }) {
-  const { trabajoId } = route.params || {};
+  const { trabajo_id } = route.params || {}; // medio harcodeado, junto con la linea 30
+  const { chatId } = route.params || {};
   const { firebaseUser } = useAuth();
 
   const [messages, setMessages] = useState([]);
@@ -26,8 +27,10 @@ export default function ChatScreen({ route }) {
   const [loading, setLoading] = useState(true);
   const [chatInfo, setChatInfo] = useState(null);
 
+  const trabajoId = trabajo_id ?? chatId;
+
   useEffect(() => {
-    if (!trabajoId) return;
+    if (!chatId) return;
     const unsubscribe = initChat(); 
 
    
@@ -36,7 +39,7 @@ export default function ChatScreen({ route }) {
         unsubscribe();
       }
     };
-  }, [trabajoId]);
+  }, [chatId]);
 
   const initChat = () => { 
     setLoading(true); 
@@ -46,7 +49,7 @@ export default function ChatScreen({ route }) {
     try {
       const q = query(
         collection(db, "mensajes"),
-        where("id_trabajo", "==", trabajoId),
+        where("id_chat", "==", chatId),
         orderBy("fecha", "asc")
       );
 
@@ -62,12 +65,12 @@ export default function ChatScreen({ route }) {
     
       });
 
-
       axios.get(`${BASE_URL}/trabajos/${trabajoId}/`).then(tRes => {
          const trabajo = tRes.data;
-         const id_trabajador = trabajo.id_trabajador;
-         const id_contratador = trabajo.id_contratador;
+         const id_trabajador = trabajo.trabajador.id_trabajador;
+         const id_contratador = trabajo.contratador.id_contratador;
          setChatInfo({ id_trabajador, id_contratador });
+
       }).catch(err => {
          console.error("Error cargando datos del trabajo:", err);
       });
@@ -84,7 +87,7 @@ export default function ChatScreen({ route }) {
     if (!input.trim() || !firebaseUser) return;
     try {
       await addDoc(collection(db, "mensajes"), {
-        id_trabajo: trabajoId,
+        id_chat: chatId,
         emisor_uid: firebaseUser.uid,
         texto: input.trim(),
         fecha: new Date(),
@@ -112,7 +115,7 @@ export default function ChatScreen({ route }) {
     >
       <View style={styles.header}>
         <Ionicons name="chatbubbles-outline" size={24} color="#fff" />
-        <Text style={styles.headerText}>Chat del trabajo #{trabajoId}</Text>
+        <Text style={styles.headerText}>Chat del trabajo</Text>
       </View>
 
       {loading ? (

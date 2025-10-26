@@ -60,12 +60,26 @@ export default function MisTrabajosScreen() {
     }
   };
 
-  const handleChatPress = (jobId) => {
-     if (!jobId) {
+  // No se usa. borrar?
+  const compararIdContratador = (trabajo, idContratadorEsperado) => {
+    if (trabajo == null) return false;
+    if (trabajo.id_contratador !== undefined && trabajo.id_contratador !== null) {
+      return String(trabajo.id_contratador) === String(idContratadorEsperado);
+    }
+    if (trabajo.contratador && (trabajo.contratador.id_contratador !== undefined || trabajo.contratador.id !== undefined)) {
+      const nested = trabajo.contratador.id_contratador ?? trabajo.contratador.id;
+      return String(nested) === String(idContratadorEsperado);
+    }
+    return false;
+  };
+  
+  const handleChatPress = (item) => {
+    const chatId = item.id_trabajo; 
+    if (!chatId) {
        Alert.alert("Error", "No se encontró el id del trabajo para abrir el chat.");
        return;
      }
-     navigation.navigate("Chat", { trabajoId: jobId });
+     navigation.navigate("Chat", { chatId: chatId });
   };
 
   const openRatingModal = (job) => {
@@ -92,9 +106,21 @@ export default function MisTrabajosScreen() {
     const id_trabajo = selectedJobToRate.id_trabajo;
     const id_trabajador = selectedJobToRate.trabajador?.id_trabajador;
     const id_contratador = profile.id_contratador;
+    const current_estado = selectedJobToRate.estado?.id_estado;
 
     if (!id_trabajador) {
       Alert.alert("Error", "No se pudo identificar al trabajador de este trabajo.");
+      setIsSubmittingRating(false);
+      return;
+    }
+
+    let newEstadoId;
+    if (current_estado === 3) {
+      newEstadoId = 4;
+    } else if (current_estado === 4) {
+      newEstadoId = 5;
+    } else {
+      Alert.alert("Error", "Este trabajo no se puede calificar en este estado.");
       setIsSubmittingRating(false);
       return;
     }
@@ -111,7 +137,7 @@ export default function MisTrabajosScreen() {
       await api.post('/calificaciones/calificaciones-trabajadores/', ratingPayload);
 
       const jobUpdatePayload = {
-        id_estado: 4
+        id_estado: newEstadoId
       };
       await api.patch(`/trabajos/${id_trabajo}/`, jobUpdatePayload);
 
@@ -144,6 +170,7 @@ export default function MisTrabajosScreen() {
   };
 
   const renderItem = ({ item }) => {
+    // console.log("contenido de item: ", item, item.id_trabajo);
     const titulo = item.titulo ?? "Sin título";
     const profesion = item.profesion_requerida?.nombre_profesion ?? "No especificada";
     const ciudad = item.zona_geografica_trabajo?.ciudad ?? "-";
@@ -151,6 +178,7 @@ export default function MisTrabajosScreen() {
     const estado = item.estado?.descripcion ?? "-";
     const idEstado = item.estado?.id_estado ?? null;
     const isActivo = idEstado === 3;
+    const idTrabajo = item.id_trabajo
 
     return (
       <View style={styles.card}>
@@ -163,7 +191,7 @@ export default function MisTrabajosScreen() {
 
           {isActivo ? (
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(item.id_trabajo)}>
+              <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(item)}>
                  <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
                  <Text style={styles.buttonText}>Chat</Text>
               </TouchableOpacity>
@@ -175,7 +203,7 @@ export default function MisTrabajosScreen() {
           ) : (idEstado === 1 || idEstado === 2) ? (
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate("PostulacionesContratador", { trabajoId: item.id_trabajo })
+                navigation.navigate("PostulacionesContratador", { trabajoId: idTrabajo })
               }
             >
               <Text style={styles.link}>Ver postulantes</Text>
