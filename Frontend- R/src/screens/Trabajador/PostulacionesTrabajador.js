@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Button, Alert, Modal, ScrollView, TextInput, Pressable } from "react-native";
-import api from "../api/api";
-import { useAuth } from "../contexts/AuthProvider";
+import api from "../../api/api";
+import { useAuth } from "../../contexts/AuthProvider";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 

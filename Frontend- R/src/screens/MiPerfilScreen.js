@@ -347,19 +347,19 @@ const MiPerfilScreen = ({ navigation }) => {
                 {/* Detalles básicos (no editables aquí) */}
                 <Text style={styles.subtitle}>Detalles de Trabajador</Text>
                 <Text style={styles.label}>Email (Trabajador)</Text>
-                <TextInput style={styles.inputDisabled} value={workerProfile?.mail_trabajador ?? 'No disponible'} editable={false} />
+                <TextInput style={styles.input} value={workerProfile?.mail_trabajador ?? 'No disponible'} />
 
                 <Text style={styles.label}>Teléfono (Trabajador)</Text>
-                <TextInput style={styles.inputDisabled} value={workerProfile?.telefono_trabajador?.toString() ?? 'No disponible'} editable={false} />
+                <TextInput style={styles.input} value={workerProfile?.telefono_trabajador?.toString() ?? 'No disponible'} />
 
                 {/* Dirección (no editable aquí) */}
                 <Text style={styles.subtitle}>Dirección (Trabajador)</Text>
                 <Text style={styles.label}>Calle</Text>
-                <TextInput style={styles.inputDisabled} value={workerProfile?.zona_geografica_trabajador?.calle ?? 'No disponible'} editable={false} />
+                <TextInput style={styles.input} value={workerProfile?.zona_geografica_trabajador?.calle ?? 'No disponible'} />
                 <Text style={styles.label}>Ciudad</Text>
-                <TextInput style={styles.inputDisabled} value={workerProfile?.zona_geografica_trabajador?.ciudad ?? 'No disponible'} editable={false} />
+                <TextInput style={styles.input} value={workerProfile?.zona_geografica_trabajador?.ciudad ?? 'No disponible'} />
                 <Text style={styles.label}>Provincia</Text>
-                <TextInput style={styles.inputDisabled} value={workerProfile?.zona_geografica_trabajador?.provincia ?? 'No disponible'} editable={false} />
+                <TextInput style={styles.input} value={workerProfile?.zona_geografica_trabajador?.provincia ?? 'No disponible'} />
 
                 {/* Sección de Profesiones */}
                 <Text style={styles.subtitle}>Mis Profesiones</Text>

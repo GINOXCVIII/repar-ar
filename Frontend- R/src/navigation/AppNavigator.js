@@ -12,7 +12,7 @@ import MisTrabajosScreen from "../screens/Contratador/MisTrabajosScreen";
 import PostulacionesContratador from "../screens/Contratador/PostulacionesContratador";
 
 import HomeTrabajadorScreen from "../screens/Trabajador/HomeTrabajadorScreen";
-import PostulacionesTrabajador from "../screens/PostulacionesTrabajador";
+import PostulacionesTrabajador from "../screens/Trabajador/PostulacionesTrabajador";
 
 import MiPerfilScreen from "../screens/MiPerfilScreen";
 import RegistroTrabajadorScreen from "../screens/RegistroTrabajadorScreen";
