@@ -19,9 +19,8 @@ const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // 👈 Nuevo estado para mostrar/ocultar contraseña
+  const [showPassword, setShowPassword] = useState(false); 
 
-  // Requisitos de la contraseña
   const hasLowercase = /[a-z]/.test(password);
   const hasUppercase = /[A-Z]/.test(password);
   const hasNumber = /\d/.test(password);

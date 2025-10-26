@@ -126,8 +126,13 @@ class TrabajadorSerializer(serializers.ModelSerializer):
 class TrabajadoresProfesionSerializer(serializers.ModelSerializer):
     trabajador = serializers.SerializerMethodField()
     profesion = serializers.SerializerMethodField()
-    id_trabajador = serializers.IntegerField(write_only=True)
-    id_profesion = serializers.IntegerField(write_only=True)
+    
+    # --- CORRECCIÓN AQUÍ ---
+    # Le decimos al serializador que el campo 'id_trabajador' (que es el que usa el frontend)
+    # debe leer/escribir desde 'id_trabajador_id' en el modelo.
+    id_trabajador = serializers.IntegerField(source='id_trabajador_id')
+    id_profesion = serializers.IntegerField(source='id_profesion_id')
+    # --- FIN DE CORRECCIÓN ---
 
     class Meta:
         model = TrabajadoresProfesion
@@ -136,15 +141,21 @@ class TrabajadoresProfesionSerializer(serializers.ModelSerializer):
 
     def get_trabajador(self, obj):
         trabajador = obj.id_trabajador
-        return TrabajadorSerializer(trabajador).data
+        # Usamos read_only=True para evitar recursión infinita si TrabajadorSerializer
+        # a su vez incluye TrabajadoresProfesionSerializer
+        return TrabajadorSerializer(trabajador, read_only=True).data 
 
     def get_profesion(self, obj):
         profesion = obj.id_profesion
         return ProfesionSerializer(profesion).data
 
     def create(self, validated_data):
-        id_trabajador = validated_data.pop('id_trabajador')
-        id_profesion = validated_data.pop('id_profesion')
+        # --- CORRECCIÓN AQUÍ ---
+        # validated_data ahora contiene 'id_trabajador_id' y 'id_profesion_id'
+        # porque especificamos el 'source' arriba.
+        id_trabajador = validated_data.pop('id_trabajador_id')
+        id_profesion = validated_data.pop('id_profesion_id')
+        # --- FIN DE CORRECCIÓN ---
 
         trabajador_profesion = TrabajadoresProfesion.objects.create(
             id_trabajador_id = id_trabajador,
@@ -154,8 +165,10 @@ class TrabajadoresProfesionSerializer(serializers.ModelSerializer):
         return trabajador_profesion
 
     def update(self, instance, validated_data):
-        id_trabajador = validated_data.pop('id_trabajador', None)
-        id_profesion = validated_data.pop('id_profesion', None)
+        # --- CORRECCIÓN AQUÍ ---
+        id_trabajador = validated_data.pop('id_trabajador_id', None)
+        id_profesion = validated_data.pop('id_profesion_id', None)
+        # --- FIN DE CORRECCIÓN ---
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
