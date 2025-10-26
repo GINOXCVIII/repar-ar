@@ -89,18 +89,23 @@ export default function HomeTrabajadorScreen({ navigation }) {
       const nuevoEstadoId = 2;
       await axios.patch(`${BASE_URL}/trabajos/${selectedJob.id_trabajo}/`, { id_estado: nuevoEstadoId });
 
-      Alert.alert("Éxito", "Te has postulado correctamente. El estado del trabajo ha sido actualizado.");
+      Alert.alert("Éxito", "Te has postulado correctamente.");
 
       await fetchMisPostulaciones(workerProfile.id_trabajador);
-      await loadOpenJobs();
-
       closeModal();
 
     } catch (e) {
       console.error("Error al postularse o actualizar estado:", e.response?.data || e.message || e);
       let errorMessage = "No se pudo completar la postulación.";
       if (e.response?.data) {
-          errorMessage += `\nDetalle: ${JSON.stringify(e.response.data)}`;
+          if (typeof e.response.data === 'string' && e.response.data.includes("UNIQUE constraint failed")) {
+               errorMessage = "Ya te has postulado para este trabajo.";
+          } else if (typeof e.response.data?.error === 'string' && e.response.data.error.includes("already exists")) { // Otra posible respuesta de error único
+               errorMessage = "Ya te has postulado para este trabajo.";
+          }
+           else {
+               errorMessage += `\nDetalle: ${JSON.stringify(e.response.data)}`;
+          }
       } else if (e.message) {
           errorMessage += `\nDetalle: ${e.message}`;
       }
@@ -127,13 +132,18 @@ export default function HomeTrabajadorScreen({ navigation }) {
        }
     }
 
-    const isJobAlreadyApplied = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.id_trabajo === item.id_trabajo);
+    // --- CORRECCIÓN AQUÍ ---
+    // Comparar con el ID anidado en el objeto 'trabajo' de la postulación
+    const isJobAlreadyApplied = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.trabajo?.id_trabajo === item.id_trabajo);
+    // --- FIN CORRECCIÓN ---
 
     return (
       <TouchableOpacity
         style={styles.jobCard}
         onPress={() => openModal(item)}
         activeOpacity={0.7}
+        // Deshabilitar si ya está postulado para evitar abrir modal innecesariamente? Opcional.
+        // disabled={isJobAlreadyApplied}
       >
         <Text style={styles.jobTitle}>{item?.titulo || "Título no disponible"}</Text>
         <Text style={styles.jobProf}>{profesion?.nombre_profesion || "Profesión no disponible"}</Text>
@@ -151,7 +161,8 @@ export default function HomeTrabajadorScreen({ navigation }) {
   const renderModalContent = () => {
      if (!selectedJob) return null;
 
-     const yaPostulado = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.id_trabajo === selectedJob.id_trabajo);
+     // Usar la misma lógica corregida aquí también
+     const yaPostulado = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.trabajo?.id_trabajo === selectedJob.id_trabajo);
      const isAssignedToMe = selectedJob?.estado?.id_estado === 3 && selectedJob?.id_trabajador === workerProfile?.id_trabajador;
 
      let quienContrata = "No especificado";
@@ -217,7 +228,6 @@ export default function HomeTrabajadorScreen({ navigation }) {
      );
   };
 
-
   return (
     <View style={styles.container}>
       <Text style={styles.headerTitle}>Ofertas de Trabajo para ti</Text>
@@ -244,7 +254,7 @@ export default function HomeTrabajadorScreen({ navigation }) {
                     <Text style={styles.emptyText}>No hay trabajos disponibles que coincidan con tus profesiones.</Text>
                  </View>
             }
-            extraData={misPostulaciones}
+            extraData={misPostulaciones} // Asegura re-render si cambia misPostulaciones
             ListFooterComponent={<View style={{ height: 20 }} />}
           />
         )
