@@ -72,102 +72,77 @@ const MiPerfilScreen = ({ navigation }) => {
   // Handler genérico para cambios en los inputs del formulario
   const handleChange = (field, value) => setForm((prevForm) => ({ ...prevForm, [field]: value }));
 
-  // --- LÓGICA DE GUARDADO (PERFIL CONTRATADOR) ---
   const saveProfile = async () => {
     setSaving(true);
     try {
-      // Datos de la zona geográfica a guardar/actualizar
       const payloadZona = {
-        calle: form.calle.trim(), // Limpiar espacios
-        ciudad: form.ciudad.trim(),
-        provincia: form.provincia.trim(),
-      };
-      // Datos del contratador a guardar/actualizar
-      const payloadContratador = {
-        nombre: form.nombre.trim(),
-        apellido: form.apellido.trim(),
-        email_contratador: form.email_contratador.trim(),
-        telefono_contratador: form.telefono_contratador.trim(),
-        dni: form.dni.trim(),
+        calle: form.calle,
+        ciudad: form.ciudad,
+        provincia: form.provincia,
       };
 
-      let zonaId = profile?.zona_geografica_contratador?.id_zona_geografica; // ID de zona actual si existe
-      let zonaActualizada = profile?.zona_geografica_contratador; // Objeto zona actual
-
-      // --- Lógica para Zona Geográfica ---
-      // Si la zona existe, intentar actualizarla (PATCH)
-      if (zonaId) {
-        try {
-          const zonaPatchRes = await axios.patch(`${BASE_URL}/zonas-geograficas/${zonaId}/`, payloadZona);
-          zonaActualizada = zonaPatchRes.data; // Guardar zona actualizada
-        } catch (e) {
-          // Si PATCH falla (ej. 404 si ID es inválido), intentar crearla (POST)
-          if (e.response?.status === 404 || e.response?.status === 400) {
-              console.warn("Zona no encontrada para PATCH, intentando POST:", e.response?.data || e);
-               try {
-                   const zonaPostRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
-                   zonaId = zonaPostRes.data.id_zona_geografica ?? zonaPostRes.data.id;
-                   zonaActualizada = zonaPostRes.data;
-               } catch (postError) {
-                    console.error("Error creando zona después de fallo en PATCH:", postError.response?.data || postError);
-                    throw new Error("No se pudo guardar la dirección."); // Relanzar error
-               }
-          } else {
-             console.error("Error actualizando zona (PATCH):", e.response?.data || e);
-             // Podríamos decidir continuar sin actualizar la zona o lanzar un error
-             // Por ahora, continuamos usando la 'zonaActualizada' original
-             // throw new Error("Error al actualizar la dirección.");
-          }
-        }
-      }
-      // Si la zona NO existía, crearla (POST)
-      else {
-        try {
-            const zonaPostRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
-            zonaId = zonaPostRes.data.id_zona_geografica ?? zonaPostRes.data.id;
-            zonaActualizada = zonaPostRes.data;
-        } catch (postError){
-            console.error("Error creando nueva zona (POST):", postError.response?.data || postError);
-            throw new Error("No se pudo guardar la nueva dirección.");
-        }
-      }
-
-       if (!zonaId) {
-           throw new Error("No se pudo obtener el ID de la zona geográfica después de guardar/crear.");
-       }
-
-      // --- Lógica para Contratador ---
-      // Si el perfil de contratador ya existe, actualizarlo (PATCH)
       if (profile?.id_contratador) {
-        const res = await axios.patch(`${BASE_URL}/contratadores/${profile.id_contratador}/`, {
-          ...payloadContratador,
-          id_zona_geografica_contratador: zonaId, // Asegurar que se asigna el ID correcto
-        });
-        // Combinar perfil antiguo, respuesta del PATCH y zona actualizada
-        const updatedProfile = normalizeAndMergeProfile(profile, res.data, zonaActualizada);
-        setProfile(updatedProfile); // Actualizar estado global
-        Alert.alert("Éxito", "Perfil actualizado correctamente.");
-      }
-      // Si el perfil de contratador NO existe (primer guardado), crearlo (POST)
-      else {
-        const payloadNuevoContratador = {
-          ...payloadContratador,
-          id_zona_geografica_contratador: zonaId,
-          uid_firebase: firebaseUser?.uid ?? null, // Incluir UID de Firebase
+        const payloadContratador = {
+          nombre: form.nombre,
+          apellido: form.apellido,
+          email_contratador: form.email_contratador,
+          telefono_contratador: form.telefono_contratador,
+          dni: form.dni,
         };
-        const res = await axios.post(`${BASE_URL}/contratadores/`, payloadNuevoContratador);
-        // Combinar respuesta del POST con la zona creada/actualizada
-        const createdProfile = normalizeAndMergeProfile(null, res.data, zonaActualizada);
-        setProfile(createdProfile); // Actualizar estado global
-        Alert.alert("Éxito", "Perfil creado correctamente.");
+        if (profile.zona_geografica_contratador?.id_zona_geografica) {
+          try {
+            await axios.patch(`${BASE_URL}/zonas-geograficas/${profile.zona_geografica_contratador.id_zona_geografica}/`, payloadZona);
+          } catch (e) {
+            console.warn("No se pudo patch zona:", e.response?.data || e);
+          }
+          const res = await axios.patch(`${BASE_URL}/contratadores/${profile.id_contratador}/`, payloadContratador);
+          const p = { ...profile, ...res.data };
+          setProfile(p);
+          Alert.alert("Perfil actualizado");
+        } else {
+          const zonaRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
+          const zonaId = zonaRes.data.id_zona_geografica ?? zonaRes.data.id ?? zonaRes.data;
+          const res = await axios.patch(`${BASE_URL}/contratadores/${profile.id_contratador}/`, {
+            ...payloadContratador,
+            id_zona_geografica_contratador: zonaId,
+          });
+          const p = normalizeAndMergeProfile(profile, res.data, zonaRes.data);
+          setProfile(p);
+          Alert.alert("Perfil actualizado");
+        }
+      } else {
+        const zonaRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
+        const zonaId = zonaRes.data.id_zona_geografica ?? zonaRes.data.id ?? zonaRes.data;
+        const payloadContratador = {
+          nombre: form.nombre,
+          apellido: form.apellido,
+          email_contratador: form.email_contratador,
+          telefono_contratador: form.telefono_contratador,
+          dni: form.dni,
+          id_zona_geografica_contratador: zonaId,
+          uid_firebase: firebaseUser?.uid ?? null,
+        };
+        console.log("Nuevo contratador: ", payloadContratador);
+        const res = await axios.post(`${BASE_URL}/contratadores/`, payloadContratador);
+        const created = {
+          raw: res.data,
+          id_contratador: res.data.id_contratador ?? res.data.id ?? null,
+          nombre: res.data.nombre ?? "",
+          apellido: res.data.apellido ?? "",
+          email_contratador: res.data.email_contratador ?? "",
+          telefono_contratador: res.data.telefono_contratador ?? "",
+          dni: res.data.dni ?? "",
+          id_zona_geografica_contratador: zonaId,
+          zona_geografica_contratador: zonaRes.data,
+        };
+        setProfile(created);
+        Alert.alert("Perfil creado correctamente");
       }
-
     } catch (err) {
-      // Captura errores de red o errores lanzados explícitamente
-      console.error("Error general guardando perfil:", err.response?.data || err.message || err);
-      Alert.alert("Error", `No se pudo guardar el perfil: ${err.message || JSON.stringify(err.response?.data)}`);
+      console.error("Error guardando perfil:", err.response?.data || err);
+      Alert.alert("Error guardando perfil", JSON.stringify(err.response?.data ?? err.message ?? err));
     } finally {
-      setSaving(false); // Quitar loader
+      setSaving(false);
     }
   };
 

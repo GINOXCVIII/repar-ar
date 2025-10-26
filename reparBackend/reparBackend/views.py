@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 
 from firebase_admin import auth as firebase_auth
 from django.db import transaction, IntegrityError
-from django.db.models import Q
 
 from .models import (
     ZonaGeografica,
@@ -173,7 +172,11 @@ class ContratadorView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        return Response({"error": "Use /api/auth/firebase-register/ para crear contratadores."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        serializer = ContratadorSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, id):
         item = get_object_or_404(Contratador, pk=id)

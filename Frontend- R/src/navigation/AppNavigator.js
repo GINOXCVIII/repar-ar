@@ -74,6 +74,8 @@ const AppNavigation = () => {
 
   if (loading) return null;
 
+  console.log("Rol activo: ", roleActive)
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
