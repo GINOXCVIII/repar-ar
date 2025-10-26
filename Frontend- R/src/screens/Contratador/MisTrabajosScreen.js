@@ -168,6 +168,7 @@ export default function MisTrabajosScreen() {
 
   const renderItem = ({ item }) => {
     const titulo = item.titulo ?? "Sin título";
+    const descripcion = item.descripcion ?? "";
     const profesion = item.profesion_requerida?.nombre_profesion ?? "No especificada";
     const ciudad = item.zona_geografica_trabajo?.ciudad ?? "-";
     const provincia = item.zona_geografica_trabajo?.provincia ?? "-";
@@ -180,6 +181,7 @@ export default function MisTrabajosScreen() {
       <View style={styles.card}>
         <Text style={styles.profesion}>{profesion}</Text>
         <Text style={styles.titulo}>{titulo}</Text>
+        <Text style={styles.descripcion}>{descripcion}</Text>
         <Text style={styles.ubicacion}>
           {ciudad}
           {provincia ? `, ${provincia}` : ""}
@@ -303,6 +305,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   titulo: { fontSize: 18, fontWeight: "700", color: "#006400", marginBottom: 6 },
+  descripcion: { fontSize: 16, color: "#333", marginBottom: 6 },
   ubicacion: { fontSize: 16, color: "#333", marginBottom: 6 },
   estadoTexto: { fontSize: 16, color: "#333", fontWeight: "600", marginBottom: 10 },
   link: {
