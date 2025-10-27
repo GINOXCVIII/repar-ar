@@ -11,9 +11,19 @@ export default function HomeContratadorScreen() {
   const isFocused = useIsFocused();
   const nav = useNavigation();
 
+  let mensajeInicio;
+  if (profile.id_contratador) {
+    mensajeInicio = "No has publicado ningún trabajo"
+  } else {
+    mensajeInicio = "Aún no completaste tu perfíl de contratador"
+  }
+
+  console.log("isFocused = ", isFocused, "\n!profile = ", !profile, "\nprofile.id_contratador = ", profile.id_contratador)
+
   useEffect(() => {
-    if (!isFocused || !profile || !profile.id_contratador) {
-      if (isFocused && !profile) {
+    if (!isFocused || !profile.id_contratador) {
+      if (isFocused && !profile.id_contratador) {
+        console.log("Mari y Riko")
         setLoading(false);
       }
       return;
@@ -95,7 +105,7 @@ export default function HomeContratadorScreen() {
           data={jobs}
           keyExtractor={(j) => String(j.id_trabajo || j.id)}
           renderItem={renderJob}
-          ListEmptyComponent={<Text>No has publicado ningún trabajo.</Text>}
+          ListEmptyComponent={<Text>{mensajeInicio}</Text>}
         />
       )}
     </View>
