@@ -9,25 +9,22 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import axios from "axios";
 import { collection, addDoc, query, orderBy, onSnapshot, where } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { useAuth } from "../contexts/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 
+import api from "../api/api";
+
 const BASE_URL = "http://127.0.0.1:8000/api";
 
 export default function ChatScreen({ route }) {
-  const { trabajo_id } = route.params || {}; // medio harcodeado, junto con la linea 30
   const { chatId } = route.params || {};
   const { firebaseUser } = useAuth();
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
-  const [chatInfo, setChatInfo] = useState(null);
-
-  const trabajoId = trabajo_id ?? chatId;
 
   useEffect(() => {
     if (!chatId) return;
@@ -65,17 +62,6 @@ export default function ChatScreen({ route }) {
     
       });
 
-      axios.get(`${BASE_URL}/trabajos/${trabajoId}/`).then(tRes => {
-         const trabajo = tRes.data;
-         const id_trabajador = trabajo.trabajador.id_trabajador;
-         const id_contratador = trabajo.contratador.id_contratador;
-         setChatInfo({ id_trabajador, id_contratador });
-
-      }).catch(err => {
-         console.error("Error cargando datos del trabajo:", err);
-      });
-
-
     } catch (err) {
        console.error("Error configurando la consulta de Firestore:", err);
        setLoading(false);
@@ -88,7 +74,7 @@ export default function ChatScreen({ route }) {
     try {
       await addDoc(collection(db, "mensajes"), {
         id_chat: chatId,
-        emisor_uid: firebaseUser.uid,
+        emisor_uid: firebaseUser.uid, // -> puedo usar esto para recuperar el nombre del emisor ojota
         texto: input.trim(),
         fecha: new Date(),
       });
@@ -98,6 +84,7 @@ export default function ChatScreen({ route }) {
     }
   };
 
+  /*
   const renderMessage = ({ item }) => {
     const isOwn = item.emisor_uid === firebaseUser?.uid;
     return (
@@ -105,6 +92,40 @@ export default function ChatScreen({ route }) {
         <Text style={[styles.msgText, !isOwn && styles.otherMsgText]}>{item.texto}</Text>
       </View>
     );
+  };
+  */
+
+  const MessageItem = ({ item }) => {
+    const isOwn = item.emisor_uid === firebaseUser?.uid;
+    const [nombreApellidoEmisor, setNombreApellidoEmisor] = useState("");
+
+    useEffect(() => {
+      const fetchNombreApellidoEmisor = async () => {
+        const nombre_apellido = await getNombreApellidoEmisor(item.emisor_uid);
+        setNombreApellidoEmisor(nombre_apellido);
+        console.log("isOwn:", isOwn, "nombre_apellido:", nombre_apellido, "\nitem.texto:", item.texto);
+      };
+      fetchNombreApellidoEmisor();
+    }, [item.emisor_uid]);
+
+    return (
+      <View style={[styles.msgBubble, isOwn ? styles.myMsg : styles.otherMsg]}>
+        <Text style={[styles.senderName]}>{nombreApellidoEmisor}</Text>
+        <Text style={[styles.msgText, !isOwn && styles.otherMsgText]}>{item.texto}</Text>
+      </View>
+    );
+  };
+
+  const getNombreApellidoEmisor = async (emisor_uid) => {
+
+    const response = await api.get(`${BASE_URL}/contratadores/?uid_firebase=${emisor_uid}`);
+
+    const data = response.data;
+
+    const nombre_emisor = data.nombre;
+    const apellido_emisor = data.apellido;
+
+    return `${nombre_emisor} ${apellido_emisor}`;
   };
 
   return (
@@ -115,7 +136,7 @@ export default function ChatScreen({ route }) {
     >
       <View style={styles.header}>
         <Ionicons name="chatbubbles-outline" size={24} color="#fff" />
-        <Text style={styles.headerText}>Chat del trabajo</Text>
+        <Text style={styles.headerText}>Chat del trabajo #{chatId}</Text>
       </View>
 
       {loading ? (
@@ -126,7 +147,7 @@ export default function ChatScreen({ route }) {
         <FlatList
           data={messages}
           keyExtractor={(item) => item.id}
-          renderItem={renderMessage}
+          renderItem={({ item }) => <MessageItem item={item} />}
           contentContainerStyle={{ padding: 10 }}
         />
       )}
@@ -204,5 +225,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  senderName: {
+  fontSize: 12,
+  marginBottom: 3,
+},
 });
 

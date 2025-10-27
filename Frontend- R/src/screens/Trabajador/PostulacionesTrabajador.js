@@ -52,6 +52,7 @@ export default function MisPostulacionesScreen() {
       Alert.alert("Error", "No se encontró el id del trabajo para abrir el chat.");
       return;
     }
+    console.log("id_chat en contratador: ", id_chat);
     nav.navigate("Chat", { chatId: id_chat });
   };
 
@@ -162,7 +163,9 @@ export default function MisPostulacionesScreen() {
     if (isActivo || isEsperandoValoracion) estadoStyle = [styles.jobState, styles.acceptedState];
     if (isFinalizado) estadoStyle = [styles.jobState, styles.finishedState];
 
-    const id_chat = trabajo.id_trabajo;
+    // const id_chat = trabajo.id_trabajo;
+    const concatenacion = String(trabajo.id_trabajo) + String(trabajo.contratador.id_contratador) + String(trabajo.trabajador.id_trabajador);
+    const id_chat = parseInt(concatenacion);
 
     return (
       <View style={styles.jobCard}>

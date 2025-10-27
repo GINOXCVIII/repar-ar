@@ -62,7 +62,7 @@ export default function MisTrabajosScreen() {
       setLoading(false);
     }
   };
-
+/*
   const handleChatPress = (item) => {
     const chatId = item.id_trabajo;
     if (!chatId) {
@@ -70,6 +70,16 @@ export default function MisTrabajosScreen() {
       return;
     }
     navigation.navigate("Chat", { chatId: chatId });
+  };
+*/
+
+  const handleChatPress = (id_chat) => {
+    if (!id_chat) {
+      Alert.alert("Error", "No se encontró el id del trabajo para abrir el chat.");
+      return;
+    }
+    console.log("id_chat en contratador: ", id_chat);
+    navigation.navigate("Chat", { chatId: id_chat });
   };
 
   const openRatingModal = (job) => {
@@ -177,6 +187,10 @@ export default function MisTrabajosScreen() {
     const isActivo = idEstado === 3;
     const idTrabajo = item.id_trabajo;
 
+    // const id_chat = trabajo.id_trabajo;
+    const concatenacion = String(item.id_trabajo) + String(item.contratador.id_contratador) + String(item.trabajador.id_trabajador);
+    const id_chat = parseInt(concatenacion);
+
     return (
       <View style={styles.card}>
         <Text style={styles.profesion}>{profesion}</Text>
@@ -199,7 +213,7 @@ export default function MisTrabajosScreen() {
         <View style={styles.rowBottom}>
           {isActivo ? (
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(item)}>
+              <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(id_chat)}>
                 <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
                 <Text style={styles.buttonText}>Chat</Text>
               </TouchableOpacity>

@@ -151,15 +151,16 @@ class EstadoView(APIView):
 
 class ContratadorView(APIView):
     def get(self, request, id=None):
-        firebase_uid = request.query_params.get('firebase_uid', None)
+        uid_firebase = request.query_params.get('uid_firebase', None)
 
         if id:
             item = get_object_or_404(Contratador, pk=id)
             serializer = ContratadorSerializer(item)
             return Response(serializer.data)
 
-        if firebase_uid:
-            items = Contratador.objects.filter(uid_firebase=firebase_uid)
+        # filtro contratadores por uid firebase
+        if uid_firebase:
+            items = Contratador.objects.filter(uid_firebase=uid_firebase)
             item = items.first()
             if item:
                 serializer = ContratadorSerializer(item)
@@ -202,6 +203,9 @@ class ContratadorView(APIView):
 
 class TrabajadorView(APIView):
     def get(self, request, id=None):
+        id_contratador = request.query_params.get('id_contratador', None)
+        uid_firebase = request.query_params.get('uid_firebase', None)
+        
         if id:
             item = get_object_or_404(Trabajador, pk=id)
             serializer = TrabajadorSerializer(item)
@@ -215,6 +219,19 @@ class TrabajadorView(APIView):
                  return Response({"error": "id_contratador debe ser un número entero."}, status=status.HTTP_400_BAD_REQUEST)
         else:
             items = Trabajador.objects.all()
+
+        # filtro trabajadores por uid_firebase de su contratador No era necesario xd pero queda por si en util despues
+        if uid_firebase:
+            contratador = Contratador.objects.filter(uid_firebase=uid_firebase).first()
+            if contratador:
+                trabajador = Trabajador.objects.filter(id_contratador=contratador).first()
+                if trabajador:
+                    serializer = TrabajadorSerializer(trabajador)
+                    return Response(serializer.data)
+                else:
+                    return Response([], status=status.HTTP_200_OK)
+            else:
+                return Response([], status=status.HTTP_200_OK)
 
         serializer = TrabajadorSerializer(items, many=True)
         return Response(serializer.data)
@@ -433,14 +450,16 @@ class PostulacionView(APIView):
         items = Postulacion.objects.select_related(
             'id_trabajo', 'id_trabajador', 'id_trabajo__id_contratador', 'id_trabajador__id_contratador'
         ).all().order_by('-fecha_postulacion')
-
+            
+        # Filtro postulaciones por id_trabajo
         id_trabajo = request.query_params.get('id_trabajo')
         if id_trabajo:
             try:
                 items = items.filter(id_trabajo=int(id_trabajo))
             except ValueError:
                  return Response({"error": "id_trabajo debe ser un número entero."}, status=status.HTTP_400_BAD_REQUEST)
-
+             
+        # Filtro postulaciones por id_trabajador
         id_trabajador = request.query_params.get('id_trabajador')
         if id_trabajador:
              try:
