@@ -46,6 +46,21 @@ const MiPerfilScreen = ({ navigation }) => {
   });
   const [saving, setSaving] = useState(false); // Loader para guardar perfil contratador
 
+  // --- STATE PARA FORM DE TRABAJADOR ---
+  const [formTrabajador, setFormTrabajador] = useState({
+    mail_trabajador: "",
+    telefono_trabajador: "",
+    calle: "",
+    ciudad: "",
+    provincia: "",
+  });
+  const [savingTrabajador, setSavingTrabajador] = useState(false); // Loader para guardar perfil trabajador
+
+  // --- STATES PARA MODALS DE ÉXITO Y ERROR ---
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // Para mostrar mensaje de error personalizado si es necesario
+
   // --- STATE PARA MODAL DE PROFESIONES ---
   const [modalVisible, setModalVisible] = useState(false); // Visibilidad del modal
   const [todasProfesiones, setTodasProfesiones] = useState([]); // Lista completa de profesiones
@@ -69,8 +84,24 @@ const MiPerfilScreen = ({ navigation }) => {
     }
   }, [profile, firebaseUser]); // Dependencias: profile y firebaseUser
 
+  // Efecto para cargar datos del perfil trabajador
+  useEffect(() => {
+    if (workerProfile) {
+      setFormTrabajador({
+        mail_trabajador: workerProfile.mail_trabajador ?? "",
+        telefono_trabajador: workerProfile.telefono_trabajador?.toString() ?? "",
+        calle: workerProfile.zona_geografica_trabajador?.calle ?? "",
+        ciudad: workerProfile.zona_geografica_trabajador?.ciudad ?? "",
+        provincia: workerProfile.zona_geografica_trabajador?.provincia ?? "",
+      });
+    }
+  }, [workerProfile]);
+
   // Handler genérico para cambios en los inputs del formulario
   const handleChange = (field, value) => setForm((prevForm) => ({ ...prevForm, [field]: value }));
+
+  // Handler genérico para cambios en los inputs del formulario trabajador
+  const handleChangeTrabajador = (field, value) => setFormTrabajador((prevForm) => ({ ...prevForm, [field]: value }));
 
   const saveProfile = async () => {
     setSaving(true);
@@ -98,7 +129,7 @@ const MiPerfilScreen = ({ navigation }) => {
           const res = await axios.patch(`${BASE_URL}/contratadores/${profile.id_contratador}/`, payloadContratador);
           const p = { ...profile, ...res.data };
           setProfile(p);
-          Alert.alert("Perfil actualizado");
+          setSuccessModalVisible(true); // Mostrar modal de éxito
         } else {
           const zonaRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
           const zonaId = zonaRes.data.id_zona_geografica ?? zonaRes.data.id ?? zonaRes.data;
@@ -108,7 +139,7 @@ const MiPerfilScreen = ({ navigation }) => {
           });
           const p = normalizeAndMergeProfile(profile, res.data, zonaRes.data);
           setProfile(p);
-          Alert.alert("Perfil actualizado");
+          setSuccessModalVisible(true); // Mostrar modal de éxito
         }
       } else {
         const zonaRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
@@ -136,13 +167,60 @@ const MiPerfilScreen = ({ navigation }) => {
           zona_geografica_contratador: zonaRes.data,
         };
         setProfile(created);
-        Alert.alert("Perfil creado correctamente");
+        setSuccessModalVisible(true); // Mostrar modal de éxito
       }
     } catch (err) {
       console.error("Error guardando perfil:", err.response?.data || err);
-      Alert.alert("Error guardando perfil", JSON.stringify(err.response?.data ?? err.message ?? err));
+      setErrorMessage(JSON.stringify(err.response?.data ?? err.message ?? err));
+      setErrorModalVisible(true); // Mostrar modal de error
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Función para guardar cambios en el perfil de trabajador
+  const saveTrabajadorProfile = async () => {
+    if (!workerProfile?.id_trabajador) {
+      setErrorMessage("No se encontró el ID del trabajador.");
+      setErrorModalVisible(true);
+      return;
+    }
+
+    setSavingTrabajador(true);
+    try {
+      // Payload para zona geográfica
+      const payloadZona = {
+        calle: formTrabajador.calle,
+        ciudad: formTrabajador.ciudad,
+        provincia: formTrabajador.provincia,
+      };
+
+      let zonaId = workerProfile.zona_geografica_trabajador?.id_zona_geografica;
+
+      if (zonaId) {
+        // Actualizar zona existente
+        await axios.patch(`${BASE_URL}/zonas-geograficas/${zonaId}/`, payloadZona);
+      } else {
+        // Crear nueva zona si no existe
+        const zonaRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
+        zonaId = zonaRes.data.id_zona_geografica ?? zonaRes.data.id ?? zonaRes.data;
+      }
+
+      // Payload para trabajador
+      const payloadTrabajador = {
+        mail_trabajador: formTrabajador.mail_trabajador,
+        telefono_trabajador: formTrabajador.telefono_trabajador,
+        id_zona_geografica_trabajador: zonaId,
+      };
+
+      await axios.patch(`${BASE_URL}/trabajadores/${workerProfile.id_trabajador}/`, payloadTrabajador);
+      setSuccessModalVisible(true); // Mostrar modal de éxito
+    } catch (err) {
+      console.error("Error guardando perfil trabajador:", err.response?.data || err);
+      setErrorMessage("No se pudieron guardar los cambios.");
+      setErrorModalVisible(true); // Mostrar modal de error
+    } finally {
+      setSavingTrabajador(false);
     }
   };
 
@@ -347,19 +425,24 @@ const MiPerfilScreen = ({ navigation }) => {
                 {/* Detalles básicos (no editables aquí) */}
                 <Text style={styles.subtitle}>Detalles de Trabajador</Text>
                 <Text style={styles.label}>Email (Trabajador)</Text>
-                <TextInput style={styles.input} value={workerProfile?.mail_trabajador ?? 'No disponible'} />
+                <TextInput style={styles.input} value={formTrabajador.mail_trabajador} onChangeText={(v) => handleChangeTrabajador("mail_trabajador", v)} />
 
                 <Text style={styles.label}>Teléfono (Trabajador)</Text>
-                <TextInput style={styles.input} value={workerProfile?.telefono_trabajador?.toString() ?? 'No disponible'} />
+                <TextInput style={styles.input} value={formTrabajador.telefono_trabajador} onChangeText={(v) => handleChangeTrabajador("telefono_trabajador", v)} />
 
                 {/* Dirección (no editable aquí) */}
                 <Text style={styles.subtitle}>Dirección (Trabajador)</Text>
                 <Text style={styles.label}>Calle</Text>
-                <TextInput style={styles.input} value={workerProfile?.zona_geografica_trabajador?.calle ?? 'No disponible'} />
+                <TextInput style={styles.input} value={formTrabajador.calle} onChangeText={(v) => handleChangeTrabajador("calle", v)} />
                 <Text style={styles.label}>Ciudad</Text>
-                <TextInput style={styles.input} value={workerProfile?.zona_geografica_trabajador?.ciudad ?? 'No disponible'} />
+                <TextInput style={styles.input} value={formTrabajador.ciudad} onChangeText={(v) => handleChangeTrabajador("ciudad", v)} />
                 <Text style={styles.label}>Provincia</Text>
-                <TextInput style={styles.input} value={workerProfile?.zona_geografica_trabajador?.provincia ?? 'No disponible'} />
+                <TextInput style={styles.input} value={formTrabajador.provincia} onChangeText={(v) => handleChangeTrabajador("provincia", v)} />
+
+                {/* Botón GUARDAR CAMBIOS */}
+                <View style={{ marginTop: 20 }}>
+                  {savingTrabajador ? <ActivityIndicator color="#228B22" /> : <Button title="GUARDAR CAMBIOS" color="#228B22" onPress={saveTrabajadorProfile} />}
+                </View>
 
                 {/* Sección de Profesiones */}
                 <Text style={styles.subtitle}>Mis Profesiones</Text>
@@ -525,6 +608,37 @@ const MiPerfilScreen = ({ navigation }) => {
             <View style={{marginTop: 10}}>
               <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#B22222" disabled={savingModal} />
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL DE ÉXITO --- */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={successModalVisible}
+        onRequestClose={() => setSuccessModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.successModalContent}>
+            <Text style={styles.modalSuccessText}>SE HA GUARDADO CON ÉXITO</Text>
+            <Button title="Cerrar" color="#228B22" onPress={() => setSuccessModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL DE ERROR --- */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={errorModalVisible}
+        onRequestClose={() => setErrorModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.errorModalContent}>
+            <Text style={styles.modalErrorText}>ERROR: CORROBORE LOS DATOS INGRESADOS</Text>
+            <Text style={styles.modalErrorDetail}>{errorMessage}</Text>
+            <Button title="Cerrar" color="#B22222" onPress={() => setErrorModalVisible(false)} />
           </View>
         </View>
       </Modal>
@@ -700,8 +814,60 @@ const styles = StyleSheet.create({
     borderTopColor: '#e0e0e0',
     borderTopWidth: 1,
     backgroundColor: 'white', // Fondo para tapar contenido detrás si es necesario
-  }
+  },
+  // Overlay para modals de éxito/error
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semitransparente
+  },
+  // Contenido del modal de éxito
+  successModalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '80%',
+  },
+  modalSuccessText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#228B22',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  // Contenido del modal de error
+  errorModalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '80%',
+  },
+  modalErrorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#B22222',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalErrorDetail: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
 });
 
 export default MiPerfilScreen;
-
