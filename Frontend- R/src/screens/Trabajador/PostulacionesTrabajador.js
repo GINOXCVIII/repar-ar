@@ -177,7 +177,7 @@ export default function MisPostulacionesScreen() {
     const concatenacion = String(trabajo.id_trabajo) + String(trabajo.contratador.id_contratador) + String(trabajo.trabajador.id_trabajador);
     const id_chat = parseInt(concatenacion);
 
-    console.log("TRABAJO: ", trabajo)
+    // console.log("TRABAJO: ", trabajo)
 
     return (
       <View style={styles.jobCard}>

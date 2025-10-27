@@ -84,9 +84,7 @@ export default function MisTrabajosScreen() {
     navigation.navigate("Chat", { chatId: id_chat });
   };
 
-  // anda. ¿setRatingModalVisible no funciona?
   const openRatingModal = (job) => {
-    console.log("llego el trabajo?: ", job)
     setSelectedJobToRate(job);
     setRating(0);
     setComment("");
@@ -209,7 +207,7 @@ export default function MisTrabajosScreen() {
     const concatenacion = String(item.id_trabajo) + String(item.contratador.id_contratador) + String(item.trabajador.id_trabajador);
     const id_chat = parseInt(concatenacion);
 
-    console.log("ITEM: ", item);
+    // console.log("ITEM: ", item);
 
     return (
       <View style={styles.card}>
