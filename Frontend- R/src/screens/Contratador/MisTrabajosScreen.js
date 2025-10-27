@@ -84,7 +84,9 @@ export default function MisTrabajosScreen() {
     navigation.navigate("Chat", { chatId: id_chat });
   };
 
+  // anda. ¿setRatingModalVisible no funciona?
   const openRatingModal = (job) => {
+    console.log("llego el trabajo?: ", job)
     setSelectedJobToRate(job);
     setRating(0);
     setComment("");
@@ -207,6 +209,8 @@ export default function MisTrabajosScreen() {
     const concatenacion = String(item.id_trabajo) + String(item.contratador.id_contratador) + String(item.trabajador.id_trabajador);
     const id_chat = parseInt(concatenacion);
 
+    console.log("ITEM: ", item);
+
     return (
       <View style={styles.card}>
         <Text style={styles.profesion}>{profesion}</Text>
@@ -272,6 +276,45 @@ export default function MisTrabajosScreen() {
           extraData={trabajos}
         />
       )}
+
+        {/* MODAL DE COPYPASTEADO DEL REPO */}
+        <Modal
+          visible={ratingModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={closeRatingModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <ScrollView>
+                <Text style={styles.modalTitle}>Finalizar y Calificar</Text>
+                <Text style={styles.modalSubtitle}>
+                  Vas a finalizar el trabajo: {selectedJobToRate?.titulo}
+                </Text>
+                <Text style={styles.modalLabel}>Califica al trabajador:</Text>
+                {renderStars()}
+                <Text style={styles.modalLabel}>Añade un comentario (opcional):</Text>
+                <TextInput
+                  style={styles.commentInput}
+                  value={comment}
+                  onChangeText={setComment}
+                  placeholder="Escribe tu reseña aquí..."
+                  multiline
+                />
+                <View style={styles.modalButtonContainer}>
+                  {isSubmittingRating ? (
+                    <ActivityIndicator size="small" color="#0b9d57" />
+                  ) : (
+                    <Button title="Enviar Calificación" onPress={handleRatingSubmit} color="#0b9d57" />
+                  )}
+                  <View style={{marginTop: 10}}>
+                    <Button title="Cancelar" onPress={closeRatingModal} color="#888" />
+                  </View>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
 
       {/* MODAL DE CANCELAR */}
       <Modal transparent visible={cancelModalVisible} animationType="fade">
@@ -405,4 +448,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 5,
   },
+
+  modalContent: { 
+    width: "90%", 
+    maxHeight: '80%',
+    backgroundColor: "#fff", 
+    borderRadius: 12, 
+    padding: 20
+  },
+
+  commentInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    backgroundColor: '#f9f9f9',
+  },
+
+  modalLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+
+  starsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+
 });
