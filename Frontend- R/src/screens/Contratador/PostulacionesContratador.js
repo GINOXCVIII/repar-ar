@@ -114,6 +114,7 @@ export default function PostulacionesContratador({ route, navigation }) {
       const payload = {
         id_trabajador: chosenTrabajador.id_trabajador,
         id_estado: 3, // nuevo estado al confirmar trabajador
+        fecha_inicio: new Date().toISOString(),
       };
 
       await axios.patch(`${BASE_URL}/trabajos/${trabajoId}/`, payload);

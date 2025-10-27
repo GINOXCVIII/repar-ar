@@ -19,6 +19,8 @@ import { useAuth } from "../../contexts/AuthProvider";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
+const BASE_URL = "http://127.0.0.1:8000/api";
+
 export default function MisTrabajosScreen() {
   const { firebaseUser, profile } = useAuth();
   const [trabajos, setTrabajos] = useState([]);
@@ -132,7 +134,21 @@ export default function MisTrabajosScreen() {
       };
 
       await api.post("/calificaciones/calificaciones-trabajadores/", ratingPayload);
-      await api.patch(`/trabajos/${id_trabajo}/`, { id_estado: newEstadoId });
+
+      let jobUpdatePayload;
+
+      if (newEstadoId === 5) {
+        jobUpdatePayload = {
+          id_estado: newEstadoId,
+          fecha_fin: new Date().toISOString(),
+        }
+      } else {
+          jobUpdatePayload = {
+          id_estado: newEstadoId,
+        }
+      }
+
+      await api.patch(`${BASE_URL}/trabajos/${id_trabajo}/`, jobUpdatePayload);
 
       Alert.alert("Éxito", "Trabajo finalizado y trabajador calificado.");
       closeRatingModal();

@@ -62,7 +62,6 @@ const CrearTrabajoScreen = ({ navigation }) => {
       return;
     }
 
-    // ✅ Verificar perfil completo
     const perfilCompleto = await validarPerfilCompleto();
     if (!perfilCompleto) {
       setModalVisible(true);
@@ -117,7 +116,6 @@ const CrearTrabajoScreen = ({ navigation }) => {
 
       await axios.post(`${BASE_URL}/trabajos/`, payload);
 
-      // ✅ Mostrar modal de éxito
       setSuccessModalVisible(true);
     } catch (err) {
       console.error("Error creando trabajo:", err.response?.data || err);
@@ -211,7 +209,6 @@ const CrearTrabajoScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Modal de perfil incompleto */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
@@ -229,7 +226,6 @@ const CrearTrabajoScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* ✅ Modal de éxito */}
       <Modal transparent visible={successModalVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalBox, { borderColor: "#16a34a", borderWidth: 2 }]}>

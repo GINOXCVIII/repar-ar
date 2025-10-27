@@ -110,11 +110,21 @@ export default function MisPostulacionesScreen() {
       
       await api.post(`${BASE_URL}/calificaciones/calificaciones-contratadores/`, ratingPayload);
 
-      console.log(newEstadoId, "es el nuevo estado que vamos a meter");
+      // console.log(newEstadoId, "es el nuevo estado que vamos a meter");
 
-      const jobUpdatePayload = {
-        id_estado: newEstadoId
-      };
+      let jobUpdatePayload;
+
+      if (newEstadoId === 5) {
+        jobUpdatePayload = {
+          id_estado: newEstadoId,
+          fecha_fin: new Date().toISOString(),
+        }
+      } else {
+          jobUpdatePayload = {
+          id_estado: newEstadoId,
+        }
+      }
+
       await api.patch(`${BASE_URL}/trabajos/${id_trabajo}/`, jobUpdatePayload);
 
       Alert.alert("Éxito", "Trabajo finalizado y contratador calificado.");
