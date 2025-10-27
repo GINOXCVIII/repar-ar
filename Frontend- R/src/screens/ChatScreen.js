@@ -103,7 +103,7 @@ export default function ChatScreen({ route }) {
       const fetchNombreApellidoEmisor = async () => {
         const nombre_apellido = await getNombreApellidoEmisor(item.emisor_uid);
         setNombreApellidoEmisor(nombre_apellido);
-        console.log("isOwn:", isOwn, "nombre_apellido:", nombre_apellido, "\nitem.texto:", item.texto);
+        // console.log("isOwn:", isOwn, "nombre_apellido:", nombre_apellido, "\nitem.texto:", item.texto);
       };
       fetchNombreApellidoEmisor();
     }, [item.emisor_uid]);
