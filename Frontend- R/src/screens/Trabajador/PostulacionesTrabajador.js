@@ -195,8 +195,10 @@ export default function MisPostulacionesScreen() {
     if (isFinalizado) estadoStyle = [styles.jobState, styles.finishedState];
 
     // const id_chat = trabajo.id_trabajo;
-    const concatenacion = String(trabajo.id_trabajo) + String(trabajo.contratador.id_contratador) + String(trabajo.trabajador.id_trabajador);
+    const concatenacion = String(trabajo.id_trabajo) + String(trabajo.contratador.id_contratador) + String(trabajo.trabajador?.id_trabajador || '');
     const id_chat = parseInt(concatenacion);
+
+    const isAssignedToMe = trabajo.trabajador?.id_trabajador === workerProfile.id_trabajador;
 
     // console.log("TRABAJO: ", trabajo)
 
@@ -212,7 +214,7 @@ export default function MisPostulacionesScreen() {
         <Text style={styles.fecha}>Fecha de inicio: {mostrarMensajeFechaInicio}</Text>
         <Text style={styles.fecha}>Fecha de finalización: {mostrarMensajeFechaFinalizacion}</Text>        
 
-        {(isActivo || isEsperandoValoracion) ? (
+        {isAssignedToMe && (isActivo || isEsperandoValoracion) ? (
           <View style={styles.buttonRow}>
             {isActivo && (
               <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(id_chat)}>
@@ -226,11 +228,9 @@ export default function MisPostulacionesScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          !isFinalizado && (
-            <TouchableOpacity onPress={() => nav.navigate("JobDetail", { job: trabajo })}>
-               <Text style={styles.jobDetailText}>Ver detalles del trabajo</Text>
-            </TouchableOpacity>
-          )
+          (trabajo.trabajador?.id_trabajador && !isAssignedToMe) ? (
+            <Text style={{ color: "red", fontSize: 16, fontWeight: "bold", textAlign: "center", marginTop: 10 }}>NO FUISTE ESCOGIDO PARA EL TRABAJO</Text>
+          ) : null
         )}
       </View>
     );
@@ -449,4 +449,3 @@ const styles = StyleSheet.create({
 
   buttonRow: { flexDirection: "row", justifyContent: "center", gap: 10 },
 });
-
