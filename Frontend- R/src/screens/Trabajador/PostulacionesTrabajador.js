@@ -216,12 +216,10 @@ export default function MisPostulacionesScreen() {
 
         {isAssignedToMe && (isActivo || isEsperandoValoracion) ? (
           <View style={styles.buttonRow}>
-            {isActivo && (
-              <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(id_chat)}>
-                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
-                <Text style={styles.buttonText}>Chat</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(id_chat)}>
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Chat</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.finishButton} onPress={() => openRatingModal(trabajo)}>
               <Ionicons name="star-outline" size={20} color="#fff" />
               <Text style={styles.buttonText}>Finalizar</Text>

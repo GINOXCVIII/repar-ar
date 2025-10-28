@@ -254,7 +254,7 @@ export default function MisTrabajosScreen() {
         )}
 
         <View style={styles.rowBottom}>
-          {isActivo ? (
+          {(isActivo || isEsperandoValoracion) ? (
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(id_chat)}>
                 <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
