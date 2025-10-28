@@ -201,9 +201,31 @@ export default function MisTrabajosScreen() {
     const estado = item.estado?.descripcion ?? "-";
     const idEstado = item.estado?.id_estado ?? null;
     const isActivo = idEstado === 3;
+    const isEsperandoValoracion = idEstado === 4;
+    const isFinalizado = idEstado === 5;
     const idTrabajo = item.id_trabajo;
 
-    // const id_chat = trabajo.id_trabajo;
+    const fechaCreacionTrabajo = item.fecha_creacion;
+    const fechaInicoTrabajo = item.fecha_inicio;
+    const fechaFinalizacionTrabajo = item.fecha_fin;
+
+    let mostrarMensajeFechaInicio;
+    let mostrarMensajeFechaFinalizacion;
+
+    const mostrarMensajeFechaCreacion = fechaCreacionTrabajo.slice(8,10) + "/" + fechaCreacionTrabajo.slice(5,7) + "/" + fechaCreacionTrabajo.slice(0,4) + " - " + fechaCreacionTrabajo.slice(11,13) + ":" + fechaCreacionTrabajo.slice(14,16) + ":" + fechaCreacionTrabajo.slice(17,19)
+
+    if (!fechaInicoTrabajo) {
+      mostrarMensajeFechaInicio = "Trabajo no iniciado"
+    } else {
+      mostrarMensajeFechaInicio = fechaInicoTrabajo.slice(8,10) + "/" + fechaInicoTrabajo.slice(5,7) + "/" + fechaInicoTrabajo.slice(0,4) + " - " + fechaInicoTrabajo.slice(11,13) + ":" + fechaInicoTrabajo.slice(14,16) + ":" + fechaInicoTrabajo.slice(17,19)
+    };
+
+    if (!fechaFinalizacionTrabajo) {
+      mostrarMensajeFechaFinalizacion = "Trabajo no finalizado"
+    } else {
+      mostrarMensajeFechaFinalizacion = fechaFinalizacionTrabajo.slice(8,10) + "/" + fechaFinalizacionTrabajo.slice(5,7) + "/" + fechaFinalizacionTrabajo.slice(0,4) + " - " + fechaFinalizacionTrabajo.slice(11,13) + ":" + fechaFinalizacionTrabajo.slice(14,16) + ":" + fechaFinalizacionTrabajo.slice(17,19)
+    };
+
     const concatenacion = String(item.id_trabajo) + String(item.contratador.id_contratador) + String(item.trabajador.id_trabajador);
     const id_chat = parseInt(concatenacion);
 
@@ -215,10 +237,13 @@ export default function MisTrabajosScreen() {
         <Text style={styles.titulo}>{titulo}</Text>
         <Text style={styles.descripcion}>{descripcion}</Text>
         <Text style={styles.ubicacion}>
-          {ciudad}
+          Ubicación: {ciudad}
           {provincia ? `, ${provincia}` : ""}
         </Text>
         <Text style={styles.estadoTexto}>Estado: {estado}</Text>
+        <Text style={styles.fecha}>Fecha de creación: {mostrarMensajeFechaCreacion}</Text>
+        <Text style={styles.fecha}>Fecha de inicio: {mostrarMensajeFechaInicio}</Text>
+        <Text style={styles.fecha}>Fecha de finalización: {mostrarMensajeFechaFinalizacion}</Text>
 
         {(idEstado === 1 || idEstado === 2) && (
           <TouchableOpacity
@@ -348,7 +373,11 @@ export default function MisTrabajosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0fff4" },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#f0fff4",
+    padding: 16,
+  },
   header: {
     fontSize: 26,
     fontWeight: "800",
@@ -478,5 +507,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 10,
   },
+
+  fecha: { fontSize: 14, color: "#505050ff", marginBottom: 5 },
 
 });

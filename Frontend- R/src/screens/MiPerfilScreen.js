@@ -450,16 +450,14 @@ const MiPerfilScreen = ({ navigation }) => {
                     <View style={styles.profesionContainer}>
                     {/* Mapear sobre el array seguro */}
                     {safeMisProfesiones.map(tp => (
-                        // Renderizar solo si 'tp.profesion' existe
                         tp?.profesion ? (
                         <View key={tp.id_trabajador_profesion} style={styles.profesionTag}>
                             <Text style={styles.profesionText}>{tp.profesion.nombre_profesion}</Text>
                         </View>
-                        ) : null // No renderizar si falta el objeto profesion
+                        ) : null
                     ))}
                     </View>
                 ) : (
-                    // Mensaje si no hay profesiones
                     <Text style={styles.infoText}>Aún no has agregado profesiones a tu perfil.</Text>
                 )}
                 {/* Botón para abrir el modal */}
@@ -470,13 +468,11 @@ const MiPerfilScreen = ({ navigation }) => {
        );
   };
 
-
-  // --- RENDER PRINCIPAL DEL COMPONENTE ---
   return (
     <ScrollView
-        style={styles.container} // Estilo del contenedor del ScrollView
-        contentContainerStyle={styles.scrollContentContainer} // Estilo del contenido interno
-        keyboardShouldPersistTaps="handled" // Cierra teclado al tocar fuera de inputs
+        style={styles.container}
+        contentContainerStyle={styles.scrollContentContainer}
+        keyboardShouldPersistTaps="handled"
     >
       {/* Título de la pantalla */}
       <Text style={styles.title}>Mi Perfil</Text>
@@ -503,18 +499,17 @@ const MiPerfilScreen = ({ navigation }) => {
         <View style={{ marginTop: 20 }}>
           <Button
             title={roleActive === "contratador" ? "Cambiar a Perfil Trabajador" : "Cambiar a Perfil Contratador"}
-            color="#007AFF" // Azul
-            onPress={toggleRole} // Llama a la función del contexto
+            color="#007AFF"
+            onPress={toggleRole}
           />
         </View>
       ) : (
-        // Botón para registrarse como trabajador (si tiene perfil contratador pero no trabajador)
         profile?.id_contratador && !workerProfile && (
             <View style={{ marginTop: 20 }}>
             <Button
                 title="Registrarme como Trabajador"
-                color="#006400" // Verde oscuro
-                onPress={() => navigation.navigate("RegistroTrabajador")} // Navega a la pantalla de registro
+                color="#006400"
+                onPress={() => navigation.navigate("RegistroTrabajador")}
             />
             </View>
         )
@@ -525,11 +520,10 @@ const MiPerfilScreen = ({ navigation }) => {
         <View style={{ marginTop: 15, marginBottom: 40 }}>
             <Button
             title="Cerrar sesión"
-            color="#DC3545" // Rojo
+            color="#DC3545"
             onPress={async () => {
                 try {
-                await signOutUser(); // Llama a la función del contexto
-                // Resetea la navegación a 'Login' para evitar volver atrás
+                await signOutUser();
                 navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
                 } catch (error) {
                 console.error("Error al cerrar sesión:", error);

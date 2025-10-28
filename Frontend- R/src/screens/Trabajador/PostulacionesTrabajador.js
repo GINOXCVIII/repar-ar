@@ -168,6 +168,27 @@ export default function MisPostulacionesScreen() {
     const isEsperandoValoracion = idEstado === 4;
     const isFinalizado = idEstado === 5;
 
+    const fechaCreacionTrabajo = trabajo.fecha_creacion;
+    const fechaInicoTrabajo = trabajo.fecha_inicio;
+    const fechaFinalizacionTrabajo = trabajo.fecha_fin;
+
+    let mostrarMensajeFechaInicio;
+    let mostrarMensajeFechaFinalizacion;
+
+    const mostrarMensajeFechaCreacion = fechaCreacionTrabajo.slice(8,10) + "/" + fechaCreacionTrabajo.slice(5,7) + "/" + fechaCreacionTrabajo.slice(0,4) + " - " + fechaCreacionTrabajo.slice(11,13) + ":" + fechaCreacionTrabajo.slice(14,16) + ":" + fechaCreacionTrabajo.slice(17,19)
+    
+    if (!fechaInicoTrabajo) {
+      mostrarMensajeFechaInicio = "Trabajo no iniciado"
+    } else {
+      mostrarMensajeFechaInicio = fechaInicoTrabajo.slice(8,10) + "/" + fechaInicoTrabajo.slice(5,7) + "/" + fechaInicoTrabajo.slice(0,4) + " - " + fechaInicoTrabajo.slice(11,13) + ":" + fechaInicoTrabajo.slice(14,16) + ":" + fechaInicoTrabajo.slice(17,19)
+    };
+
+    if (!fechaFinalizacionTrabajo) {
+      mostrarMensajeFechaFinalizacion = "Trabajo no finalizado"
+    } else {
+      mostrarMensajeFechaFinalizacion = fechaFinalizacionTrabajo.slice(8,10) + "/" + fechaFinalizacionTrabajo.slice(5,7) + "/" + fechaFinalizacionTrabajo.slice(0,4) + " - " + fechaFinalizacionTrabajo.slice(11,13) + ":" + fechaFinalizacionTrabajo.slice(14,16) + ":" + fechaFinalizacionTrabajo.slice(17,19)
+    };
+  
     const estadoTexto = trabajo.estado?.descripcion ?? "No definido";
     let estadoStyle = styles.jobState;
     if (isActivo || isEsperandoValoracion) estadoStyle = [styles.jobState, styles.acceptedState];
@@ -181,24 +202,26 @@ export default function MisPostulacionesScreen() {
 
     return (
       <View style={styles.jobCard}>
-        <Text style={styles.jobTitle}>{trabajo.titulo || "S/Titulo"}</Text>
         <Text style={styles.jobProf}>{trabajo.profesion_requerida?.nombre_profesion || "S/Profesion"}</Text>
-
-        <Text style={estadoStyle}>Estado: {estadoTexto}</Text>
-
+        <Text style={styles.jobTitle}>{trabajo.titulo || "S/Titulo"}</Text>
         <Text numberOfLines={2} style={styles.jobDescription}>{trabajo.descripcion ?? ""}</Text>
         <Text style={styles.jobLocation}>Ubicación: {ubicacion}</Text>
+        <Text style={styles.estado}>Estado: {estadoTexto}</Text>
+
+        <Text style={styles.fecha}>Fecha de creación: {mostrarMensajeFechaCreacion}</Text>
+        <Text style={styles.fecha}>Fecha de inicio: {mostrarMensajeFechaInicio}</Text>
+        <Text style={styles.fecha}>Fecha de finalización: {mostrarMensajeFechaFinalizacion}</Text>        
 
         {(isActivo || isEsperandoValoracion) ? (
           <View style={styles.buttonRow}>
             {isActivo && (
               <TouchableOpacity style={styles.chatButton} onPress={() => handleChatPress(id_chat)}>
-                <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#fff" />
                 <Text style={styles.buttonText}>Chat</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.finishButton} onPress={() => openRatingModal(trabajo)}>
-              <Ionicons name="star-outline" size={18} color="#fff" />
+              <Ionicons name="star-outline" size={20} color="#fff" />
               <Text style={styles.buttonText}>Finalizar</Text>
             </TouchableOpacity>
           </View>
@@ -274,32 +297,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#f3fbf7"
+    backgroundColor: "#f0fff4"
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: "800",
-    color: "#009879",
+    color: "#0b9d57",
+    marginTop: 16,
     marginBottom: 12,
-    textAlign: 'center'
+    textAlign: "center",
   },
   jobCard: {
     backgroundColor: "#fff",
-    padding: 16,
-    marginBottom: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd'
+    padding: 20,
+    borderRadius: 14,
+    marginBottom: 14,
+    marginHorizontal: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   jobTitle: {
     fontWeight: "700",
-    color: "#009879",
-    fontSize: 16
+    color: "#006400",
+    fontSize: 18,
+    marginBottom: 6,
   },
   jobProf: {
-    fontWeight: "700",
-    color: "#005c49ff",
-    fontSize: 14
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0b9d57",
+    marginBottom: 8,
   },
   jobState: {
     fontSize: 12,
@@ -316,50 +346,52 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   jobDescription: {
-    marginTop: 6,
+    fontSize: 16,
+    marginBottom: 6,
     color: '#333'
   },
   jobLocation: {
-    color: "#666",
-    marginTop: 10,
-    fontSize: 12
+    color: "#333",
+    marginBottom: 6,
+    fontSize: 16
   },
   jobDetailText: {
     color: "#007AFF",
     marginTop: 8,
     fontWeight: '600'
   },
+  /*
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: 'center',
     marginTop: 10,
     alignSelf: 'flex-start'
   },
+  */
   emptyText: {
     textAlign: 'center',
     marginTop: 20,
     color: '#666'
   },
+
   chatButton: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "#007AFF",
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderRadius: 8,
-    marginRight: 10,
   },
   finishButton: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "#f1c40f",
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     borderRadius: 8,
   },
+
   chatText: { color: "#fff", marginLeft: 6, fontWeight: "700" },
-  buttonText: { color: "#fff", marginLeft: 5, fontWeight: "700" },
+  buttonText: { color: "#fff", marginLeft: 5, fontWeight: "bold", fontSize: 15 },
   modalOverlay: { 
     flex: 1, 
     backgroundColor: "rgba(0,0,0,0.5)", 
@@ -409,6 +441,12 @@ const styles = StyleSheet.create({
   },
   modalButtonContainer: {
     marginTop: 20,
-  }
+  },
+
+  estado: { fontSize: 16, color: "#333", fontWeight: "600", marginBottom: 10 },
+
+  fecha: { fontSize: 14, color: "#505050ff", marginBottom: 5 },
+
+  buttonRow: { flexDirection: "row", justifyContent: "center", gap: 10 },
 });
 
