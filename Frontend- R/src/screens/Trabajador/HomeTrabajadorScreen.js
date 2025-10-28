@@ -38,7 +38,9 @@ export default function HomeTrabajadorScreen({ navigation }) {
     }
 
     const profesionIdsString = profesionIds.join(',');
-    const url = `${BASE_URL}/trabajos/?id_estado=1&profesiones=${profesionIdsString}`;
+    const trabajosPublOEsCo = "1,2";
+    // const url = `${BASE_URL}/trabajos/?id_estado=1&profesiones=${profesionIdsString}`;
+    const url = `${BASE_URL}/trabajos/?id_estado=${trabajosPublOEsCo}&profesiones=${profesionIdsString}`;
     console.log("Cargando trabajos desde:", url);
 
     try {

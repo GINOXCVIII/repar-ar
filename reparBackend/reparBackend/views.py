@@ -352,7 +352,14 @@ class TrabajoView(APIView):
                 items = Trabajo.objects.none()
                 
         # Filtro por estado del trabajo
-        if id_estado:
+        print(f"id_estado: {id_estado}")
+        if id_estado == "1,2":
+            estados_filtrar = [int(id_estado[0]), int(id_estado[2])]
+            try:
+                items = items.filter(id_estado__in=estados_filtrar)
+            except:
+                items = Trabajo.objects.none()
+        else: # Vale para lo otro
             try:
                 items = items.filter(id_estado_id=id_estado)
             except:
