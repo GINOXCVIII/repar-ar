@@ -422,15 +422,20 @@ const MiPerfilScreen = ({ navigation }) => {
 
        return (
             <View>
-                {/* Detalles básicos (no editables aquí) */}
                 <Text style={styles.subtitle}>Detalles de Trabajador</Text>
+
+                <Text style={styles.label}>Nombre</Text>
+                <TextInput style={styles.inputDisabled} value={form.nombre} onChangeText={(v) => handleChange("nombre", v)} editable={false}/>
+
+                <Text style={styles.label}>Apellido</Text>
+                <TextInput style={styles.inputDisabled} value={form.apellido} onChangeText={(v) => handleChange("apellido", v)} editable={false}/>
+
                 <Text style={styles.label}>Email (Trabajador)</Text>
                 <TextInput style={styles.input} value={formTrabajador.mail_trabajador} onChangeText={(v) => handleChangeTrabajador("mail_trabajador", v)} />
 
                 <Text style={styles.label}>Teléfono (Trabajador)</Text>
                 <TextInput style={styles.input} value={formTrabajador.telefono_trabajador} onChangeText={(v) => handleChangeTrabajador("telefono_trabajador", v)} />
 
-                {/* Dirección (no editable aquí) */}
                 <Text style={styles.subtitle}>Dirección (Trabajador)</Text>
                 <Text style={styles.label}>Calle</Text>
                 <TextInput style={styles.input} value={formTrabajador.calle} onChangeText={(v) => handleChangeTrabajador("calle", v)} />
