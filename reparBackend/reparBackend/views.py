@@ -324,6 +324,8 @@ class TrabajoView(APIView):
         id_contratador = request.query_params.get('id_contratador', None)
         uid_firebase = request.query_params.get('uid_firebase', None)
         profesiones_str = request.query_params.get('profesiones', None)
+        
+        id_estado = request.query_params.get('id_estado', None)
 
         if profesiones_str:
             try:
@@ -336,21 +338,30 @@ class TrabajoView(APIView):
                  return Response({"error": "El parámetro 'profesiones' debe ser una lista de IDs numéricos separados por comas."},
                                  status=status.HTTP_400_BAD_REQUEST)
 
-        elif id_contratador:
+        if id_contratador:
             try:
                 items = items.filter(id_contratador_id=int(id_contratador))
             except ValueError:
                 items = Trabajo.objects.none()
 
-        elif uid_firebase:
+        if uid_firebase:
             contratador = Contratador.objects.filter(uid_firebase=uid_firebase).first()
             if contratador:
                 items = items.filter(id_contratador_id=contratador.id_contratador)
             else:
                 items = Trabajo.objects.none()
+                
+        # Filtro por estado del trabajo
+        if id_estado:
+            try:
+                items = items.filter(id_estado_id=id_estado)
+            except:
+                items = Trabajo.objects.all()
 
         serializer = TrabajoSerializer(items, many=True)
         return Response(serializer.data)
+    
+        # SI USAS IF SOLO SE APLICA UN FILTRO!!! WACHO
 
 
     @transaction.atomic

@@ -23,7 +23,7 @@ class Profesion(models.Model):
         verbose_name_plural = "Profesiones"
         
     def __str__(self):
-        return f"{self.nombre_profesion}"
+        return f"{self.nombre_profesion} (ID: {self.id_profesion})"
 
 class Estado(models.Model):
     id_estado = models.AutoField(primary_key=True)
@@ -146,9 +146,6 @@ class TrabajadoresProfesion(models.Model):
     class Meta:
         verbose_name = "Profesion de un trabajador"
         verbose_name_plural = "Profesiones de un trabajador"
-        # --- CORRECCIÓN AQUÍ ---
-        unique_together = ('id_trabajador', 'id_profesion')
-        # --- FIN DE CORRECCIÓN ---
         
     def __str__(self):
         return f"{self.id_trabajador.id_contratador.apellido}, {self.id_trabajador.id_contratador.nombre} (ID: {self.id_trabajador.id_trabajador}) {self.id_profesion.nombre_profesion} MN: {self.matricula}"
