@@ -11,16 +11,14 @@ import {
   Modal,
   FlatList,
   TouchableOpacity,
-  Platform, // Import Platform for OS specific adjustments
+  Platform, 
 } from "react-native";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthProvider";
 
-// Asegúrate que BASE_URL apunte a tu backend correctamente (usa tu IP si pruebas en móvil)
 const BASE_URL = "http://127.0.0.1:8000/api";
 
 const MiPerfilScreen = ({ navigation }) => {
-  // --- HOOKS DE AUTH ---
   const {
     firebaseUser,
     profile,
@@ -29,11 +27,10 @@ const MiPerfilScreen = ({ navigation }) => {
     roleActive,
     workerProfile,
     toggleRole,
-    misProfesiones, // Ya viene del Context (asegúrate que sea un array)
-    fetchMisProfesiones, // Función para recargar las profesiones
+    misProfesiones, 
+    fetchMisProfesiones, 
   } = useAuth();
 
-  // --- STATE PARA FORM DE CONTRATADOR ---
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
@@ -44,9 +41,8 @@ const MiPerfilScreen = ({ navigation }) => {
     ciudad: "",
     provincia: "",
   });
-  const [saving, setSaving] = useState(false); // Loader para guardar perfil contratador
+  const [saving, setSaving] = useState(false);
 
-  // --- STATE PARA FORM DE TRABAJADOR ---
   const [formTrabajador, setFormTrabajador] = useState({
     mail_trabajador: "",
     telefono_trabajador: "",
@@ -54,21 +50,18 @@ const MiPerfilScreen = ({ navigation }) => {
     ciudad: "",
     provincia: "",
   });
-  const [savingTrabajador, setSavingTrabajador] = useState(false); // Loader para guardar perfil trabajador
+  const [savingTrabajador, setSavingTrabajador] = useState(false);
 
-  // --- STATES PARA MODALS DE ÉXITO Y ERROR ---
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // Para mostrar mensaje de error personalizado si es necesario
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // --- STATE PARA MODAL DE PROFESIONES ---
-  const [modalVisible, setModalVisible] = useState(false); // Visibilidad del modal
-  const [todasProfesiones, setTodasProfesiones] = useState([]); // Lista completa de profesiones
-  const [selectedProfesiones, setSelectedProfesiones] = useState(new Map()); // Map para selecciones en el modal
-  const [loadingModal, setLoadingModal] = useState(false); // Loader al abrir modal
-  const [savingModal, setSavingModal] = useState(false); // Loader al guardar profesiones
+  const [modalVisible, setModalVisible] = useState(false);
+  const [todasProfesiones, setTodasProfesiones] = useState([]);
+  const [selectedProfesiones, setSelectedProfesiones] = useState(new Map());
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [savingModal, setSavingModal] = useState(false);
 
-  // Efecto para cargar datos del perfil en el formulario cuando cambian
   useEffect(() => {
     if (profile) {
       setForm({
@@ -82,9 +75,8 @@ const MiPerfilScreen = ({ navigation }) => {
         provincia: profile.zona_geografica_contratador?.provincia ?? "",
       });
     }
-  }, [profile, firebaseUser]); // Dependencias: profile y firebaseUser
+  }, [profile, firebaseUser]);
 
-  // Efecto para cargar datos del perfil trabajador
   useEffect(() => {
     if (workerProfile) {
       setFormTrabajador({
@@ -97,10 +89,8 @@ const MiPerfilScreen = ({ navigation }) => {
     }
   }, [workerProfile]);
 
-  // Handler genérico para cambios en los inputs del formulario
   const handleChange = (field, value) => setForm((prevForm) => ({ ...prevForm, [field]: value }));
 
-  // Handler genérico para cambios en los inputs del formulario trabajador
   const handleChangeTrabajador = (field, value) => setFormTrabajador((prevForm) => ({ ...prevForm, [field]: value }));
 
   const saveProfile = async () => {
@@ -129,7 +119,7 @@ const MiPerfilScreen = ({ navigation }) => {
           const res = await axios.patch(`${BASE_URL}/contratadores/${profile.id_contratador}/`, payloadContratador);
           const p = { ...profile, ...res.data };
           setProfile(p);
-          setSuccessModalVisible(true); // Mostrar modal de éxito
+          setSuccessModalVisible(true);
         } else {
           const zonaRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
           const zonaId = zonaRes.data.id_zona_geografica ?? zonaRes.data.id ?? zonaRes.data;
@@ -139,7 +129,7 @@ const MiPerfilScreen = ({ navigation }) => {
           });
           const p = normalizeAndMergeProfile(profile, res.data, zonaRes.data);
           setProfile(p);
-          setSuccessModalVisible(true); // Mostrar modal de éxito
+          setSuccessModalVisible(true);
         }
       } else {
         const zonaRes = await axios.post(`${BASE_URL}/zonas-geograficas/`, payloadZona);
@@ -167,18 +157,17 @@ const MiPerfilScreen = ({ navigation }) => {
           zona_geografica_contratador: zonaRes.data,
         };
         setProfile(created);
-        setSuccessModalVisible(true); // Mostrar modal de éxito
+        setSuccessModalVisible(true);
       }
     } catch (err) {
       console.error("Error guardando perfil:", err.response?.data || err);
       setErrorMessage(JSON.stringify(err.response?.data ?? err.message ?? err));
-      setErrorModalVisible(true); // Mostrar modal de error
+      setErrorModalVisible(true);
     } finally {
       setSaving(false);
     }
   };
 
-  // Función para guardar cambios en el perfil de trabajador
   const saveTrabajadorProfile = async () => {
     if (!workerProfile?.id_trabajador) {
       setErrorMessage("No se encontró el ID del trabajador.");
@@ -188,7 +177,6 @@ const MiPerfilScreen = ({ navigation }) => {
 
     setSavingTrabajador(true);
     try {
-      // Payload para zona geográfica
       const payloadZona = {
         calle: formTrabajador.calle,
         ciudad: formTrabajador.ciudad,
@@ -198,7 +186,7 @@ const MiPerfilScreen = ({ navigation }) => {
       let zonaId = workerProfile.zona_geografica_trabajador?.id_zona_geografica;
 
       if (zonaId) {
-        // Actualizar zona existente
+        // actualiza zona existente
         await axios.patch(`${BASE_URL}/zonas-geograficas/${zonaId}/`, payloadZona);
       } else {
         // Crear nueva zona si no existe
@@ -206,7 +194,6 @@ const MiPerfilScreen = ({ navigation }) => {
         zonaId = zonaRes.data.id_zona_geografica ?? zonaRes.data.id ?? zonaRes.data;
       }
 
-      // Payload para trabajador
       const payloadTrabajador = {
         mail_trabajador: formTrabajador.mail_trabajador,
         telefono_trabajador: formTrabajador.telefono_trabajador,
@@ -214,48 +201,42 @@ const MiPerfilScreen = ({ navigation }) => {
       };
 
       await axios.patch(`${BASE_URL}/trabajadores/${workerProfile.id_trabajador}/`, payloadTrabajador);
-      setSuccessModalVisible(true); // Mostrar modal de éxito
+      setSuccessModalVisible(true); 
     } catch (err) {
       console.error("Error guardando perfil trabajador:", err.response?.data || err);
       setErrorMessage("No se pudieron guardar los cambios.");
-      setErrorModalVisible(true); // Mostrar modal de error
+      setErrorModalVisible(true); 
     } finally {
       setSavingTrabajador(false);
     }
   };
 
-  // Función auxiliar para combinar datos del perfil (revisada)
   const normalizeAndMergeProfile = (oldProfile, contratadorData, zonaData) => {
-     const baseProfile = oldProfile || {}; // Objeto vacío si no hay perfil antiguo
-     const baseZona = baseProfile.zona_geografica_contratador || {}; // Zona antigua o vacía
-     const newZona = zonaData || baseZona; // Prioriza zona nueva si existe
+     const baseProfile = oldProfile || {};
+     const baseZona = baseProfile.zona_geografica_contratador || {};
+     const newZona = zonaData || baseZona;
 
-     // Obtener IDs de forma segura y consistente
      const contratadorId = contratadorData?.id_contratador ?? contratadorData?.id ?? baseProfile.id_contratador;
-     // El ID de zona puede venir en contratadorData (si se hizo PATCH) o en zonaData (si se hizo POST)
      const zonaId = contratadorData?.id_zona_geografica_contratador
                     ?? newZona?.id_zona_geografica
                     ?? newZona?.id
-                    ?? baseZona?.id_zona_geografica // Último recurso: ID de zona antigua
-                    ?? null; // Default a null si no se encuentra
+                    ?? baseZona?.id_zona_geografica
+                    ?? null;
 
      return {
-       raw: contratadorData || baseProfile.raw, // Mantener 'raw' si es útil
-       id: contratadorId, // Usar 'id' como identificador primario localmente?
+       raw: contratadorData || baseProfile.raw,
+       id: contratadorId,
        id_contratador: contratadorId,
        nombre: contratadorData?.nombre ?? baseProfile.nombre ?? "",
        apellido: contratadorData?.apellido ?? baseProfile.apellido ?? "",
        email_contratador: contratadorData?.email_contratador ?? baseProfile.email_contratador ?? "",
        telefono_contratador: contratadorData?.telefono_contratador?.toString() ?? baseProfile.telefono_contratador ?? "", // Asegurar string
-       dni: contratadorData?.dni?.toString() ?? baseProfile.dni ?? "", // Asegurar string
+       dni: contratadorData?.dni?.toString() ?? baseProfile.dni ?? "",
        id_zona_geografica_contratador: zonaId,
-       zona_geografica_contratador: newZona, // Guardar el objeto zona completo
+       zona_geografica_contratador: newZona,
      };
   };
 
-  // --- LÓGICA DEL MODAL DE PROFESIONES ---
-
-  // Abre el modal y carga las profesiones
   const openProfesionModal = async () => {
     if (!workerProfile?.id_trabajador) {
         Alert.alert("Perfil no listo", "Tu perfil de trabajador aún no está completamente cargado.");
@@ -264,7 +245,6 @@ const MiPerfilScreen = ({ navigation }) => {
     setLoadingModal(true);
     setModalVisible(true);
     try {
-      // Cargar TODAS las profesiones disponibles
       const resProfesiones = await axios.get(`${BASE_URL}/profesiones/`);
       setTodasProfesiones(resProfesiones.data || []);
 
@@ -272,33 +252,31 @@ const MiPerfilScreen = ({ navigation }) => {
       const initialMap = new Map();
       const currentProfesiones = Array.isArray(misProfesiones) ? misProfesiones : [];
       currentProfesiones.forEach((tp) => {
-        if (tp.id_profesion) { // Usar el ID directo de la profesión
+        if (tp.id_profesion) { 
             initialMap.set(tp.id_profesion, true);
         }
       });
-      setSelectedProfesiones(initialMap); // Establecer estado inicial del modal
+      setSelectedProfesiones(initialMap);
 
     } catch (err) {
       console.error("Error al abrir/cargar modal de profesiones:", err.response?.data || err.message || err);
       Alert.alert("Error", "No se pudo cargar la lista de profesiones.");
-      setModalVisible(false); // Cerrar si falla
+      setModalVisible(false);
     } finally {
-      setLoadingModal(false); // Quitar loader
+      setLoadingModal(false);
     }
   };
 
-  // Cambia el estado seleccionado de una profesión en el Map del modal
   const handleToggleProfesion = (idProfesion) => {
     setSelectedProfesiones((prevMap) => {
-      const newMap = new Map(prevMap); // Copia el mapa anterior
-      newMap.set(idProfesion, !newMap.get(idProfesion)); // Invierte el valor booleano
-      return newMap; // Devuelve el nuevo mapa
+      const newMap = new Map(prevMap);
+      newMap.set(idProfesion, !newMap.get(idProfesion));
+      return newMap;
     });
   };
 
-  // Guarda los cambios hechos en el modal (añade/quita profesiones)
   const handleSaveProfesiones = async () => {
-    setSavingModal(true); // Activar loader de guardado
+    setSavingModal(true); 
     const workerId = workerProfile?.id_trabajador;
     if (!workerId) {
         Alert.alert("Error", "ID de trabajador no encontrado.");
@@ -306,48 +284,40 @@ const MiPerfilScreen = ({ navigation }) => {
         return;
     }
 
-    const currentProfesiones = Array.isArray(misProfesiones) ? misProfesiones : []; // Array seguro
-    const tasks = []; // Array para promesas de axios
+    const currentProfesiones = Array.isArray(misProfesiones) ? misProfesiones : [];
+    const tasks = [];
 
-    // --- Tareas de AÑADIR ---
     selectedProfesiones.forEach((isSelected, idProfesion) => {
-      // Buscar si ya la tiene comparando IDs
       const alreadyHas = currentProfesiones.some(tp => tp.id_profesion === idProfesion);
-      // Si está marcada en el modal Y NO la tiene actualmente -> Añadir (POST)
       if (isSelected && !alreadyHas) {
         tasks.push(
           axios.post(`${BASE_URL}/profesiones-de-trabajadores/`, {
             id_trabajador: workerId,
             id_profesion: idProfesion,
           }).catch(err => {
-            // Manejo específico del error de duplicado (IntegrityError desde Django via 500)
             if (err.response?.status === 500 && err.response?.data?.includes && err.response.data.includes("IntegrityError") && err.response.data.includes("Duplicate entry")) {
               console.warn(`Ignorando error de duplicado al añadir profesión ${idProfesion}.`);
-              return Promise.resolve({ ignoredDuplicate: true }); // Resolver para no detener Promise.all
+              return Promise.resolve({ ignoredDuplicate: true });
             }
             console.error(`Error adding profesion ${idProfesion}:`, err.response?.data || err);
-            return Promise.reject(err); // Rechazar para otros errores
+            return Promise.reject(err);
           })
         );
       }
     });
 
-    // --- Tareas de QUITAR ---
     currentProfesiones.forEach((tp) => {
-      // Si la profesión actual NO está marcada en el modal -> Quitar (DELETE)
-      // Asegurarse que tp.id_profesion existe para la comparación
       if (tp.id_profesion && !selectedProfesiones.get(tp.id_profesion)) {
         tasks.push(
           axios.delete(`${BASE_URL}/profesiones-de-trabajadores/${tp.id_trabajador_profesion}/`)
              .catch(err => {
                  console.error(`Error deleting profesion relation ${tp.id_trabajador_profesion}:`, err.response?.data || err);
-                 return Promise.reject(err); // Rechazar si falla el borrado
+                 return Promise.reject(err);
               })
         );
       }
     });
 
-    // Si no hay tareas, informar y salir
     if (tasks.length === 0) {
         Alert.alert("Información", "No hay cambios para guardar.");
         setModalVisible(false);
@@ -355,30 +325,22 @@ const MiPerfilScreen = ({ navigation }) => {
         return;
     }
 
-    // Ejecutar todas las tareas en paralelo
     try {
       await Promise.all(tasks);
       Alert.alert("Éxito", "Profesiones actualizadas.");
-      // Recargar la lista de profesiones en el contexto para reflejar cambios
       await fetchMisProfesiones(workerId);
-      setModalVisible(false); // Cerrar modal
+      setModalVisible(false);
 
     } catch (err) {
-      // Si Promise.all rechaza, significa que una tarea (que no fue ignorada) falló
       console.error("Error al guardar/eliminar una o más profesiones:", err);
       Alert.alert("Error", "Algunos cambios no se pudieron guardar. Por favor, revisa e intenta de nuevo.");
-      // Opcionalmente, recargar igual para ver si algo sí se guardó
       try { await fetchMisProfesiones(workerId); } catch (e) {}
 
     } finally {
-      setSavingModal(false); // Quitar loader
+      setSavingModal(false);
     }
   };
 
-
-  // --- RENDERIZADO DE VISTAS ---
-
-  // Componente para renderizar el formulario de perfil Contratador
   const renderContratadorProfile = () => (
     <>
       {/* Campos del Contratador */}
@@ -417,13 +379,12 @@ const MiPerfilScreen = ({ navigation }) => {
 
   // Componente para renderizar la vista de perfil Trabajador
   const renderTrabajadorProfile = () => {
-       // Variable segura para 'misProfesiones' (siempre un array)
        const safeMisProfesiones = Array.isArray(misProfesiones) ? misProfesiones : [];
 
        return (
             <View>
                 <Text style={styles.subtitle}>Detalles de Trabajador</Text>
-
+                {/* Nombre y apellidos tomados del perfil de contratador, no son editables aca */}
                 <Text style={styles.label}>Nombre</Text>
                 <TextInput style={styles.inputDisabled} value={form.nombre} onChangeText={(v) => handleChange("nombre", v)} editable={false}/>
 
@@ -453,7 +414,6 @@ const MiPerfilScreen = ({ navigation }) => {
                 <Text style={styles.subtitle}>Mis Profesiones</Text>
                 {safeMisProfesiones.length > 0 ? (
                     <View style={styles.profesionContainer}>
-                    {/* Mapear sobre el array seguro */}
                     {safeMisProfesiones.map(tp => (
                         tp?.profesion ? (
                         <View key={tp.id_trabajador_profesion} style={styles.profesionTag}>
@@ -465,7 +425,6 @@ const MiPerfilScreen = ({ navigation }) => {
                 ) : (
                     <Text style={styles.infoText}>Aún no has agregado profesiones a tu perfil.</Text>
                 )}
-                {/* Botón para abrir el modal */}
                 <View style={{marginTop: 15}}>
                     <Button title="Editar Mis Profesiones" onPress={openProfesionModal} color="#007AFF" />
                 </View>
@@ -479,26 +438,21 @@ const MiPerfilScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContentContainer}
         keyboardShouldPersistTaps="handled"
     >
-      {/* Título de la pantalla */}
       <Text style={styles.title}>Mi Perfil</Text>
 
-      {/* Indicador de Rol Activo */}
       <Text style={styles.roleIndicator}>
         Perfil Activo: {roleActive === "contratador" ? "Contratador" : "Trabajador"}
       </Text>
 
-      {/* --- Renderizado Condicional del Contenido del Perfil --- */}
       {/* Muestra Contratador si el rol es 'contratador' y el perfil está cargado */}
       {roleActive === "contratador" && profile ? renderContratadorProfile() : null}
       {/* Muestra Trabajador si el rol es 'trabajador' y el workerProfile está cargado */}
       {roleActive === "trabajador" && workerProfile ? renderTrabajadorProfile() : null}
-      {/* Muestra un loader si el perfil esperado para el rol activo aún no está listo */}
+
       { (roleActive === 'contratador' && !profile) || (roleActive === 'trabajador' && !workerProfile) ? (
             <ActivityIndicator style={{marginTop: 30}} size="large" color="#006400" />
       ) : null}
 
-
-      {/* --- BOTONES DE ACCIÓN GLOBALES --- */}
       {/* Botón para cambiar de rol (solo si existe perfil de trabajador) */}
       {workerProfile?.id_trabajador ? (
         <View style={{ marginTop: 20 }}>
@@ -540,70 +494,58 @@ const MiPerfilScreen = ({ navigation }) => {
       )}
 
 
-      {/* --- MODAL PARA EDITAR PROFESIONES --- */}
       <Modal
-        animationType="slide" // Animación al aparecer/desaparecer
-        transparent={false} // No transparente, ocupa toda la pantalla
-        visible={modalVisible} // Controlado por el estado modalVisible
-        onRequestClose={() => { // Acción al presionar botón "atrás" (Android)
-             // Permitir cerrar solo si no se está guardando
+        animationType="slide"
+        transparent={false}
+        visible={modalVisible}
+        onRequestClose={() => {
              if (!savingModal) {
                   setModalVisible(false);
              }
         }}
       >
-        {/* Usar SafeAreaView podría ser mejor para evitar notch/barra de estado */}
         <View style={styles.modalContainer}>
-          {/* Título del Modal */}
           <Text style={styles.modalTitle}>Selecciona tus Profesiones</Text>
 
-          {/* Loader mientras cargan las profesiones */}
           {loadingModal ? (
             <ActivityIndicator size="large" color="#006400" />
           ) : (
-            // Lista de profesiones disponibles
             <FlatList
-              data={todasProfesiones} // Array con todas las profesiones
-              keyExtractor={(item) => item.id_profesion.toString()} // Key única para cada item
+              data={todasProfesiones}
+              keyExtractor={(item) => item.id_profesion.toString()}
               renderItem={({ item }) => {
-                // Verificar si esta profesión está seleccionada en el Map
                 const isSelected = !!selectedProfesiones.get(item.id_profesion);
                 return (
-                  // Botón táctil para cada profesión
                   <TouchableOpacity
                     style={[
-                        styles.modalItem, // Estilo base
-                        isSelected && styles.modalItemSelected // Estilo si está seleccionada (verde)
+                        styles.modalItem,
+                        isSelected && styles.modalItemSelected 
                     ]}
-                    onPress={() => handleToggleProfesion(item.id_profesion)} // Llama a la función para cambiar selección
-                    activeOpacity={0.7} // Efecto visual al tocar
-                    disabled={savingModal} // Deshabilitar si se está guardando
+                    onPress={() => handleToggleProfesion(item.id_profesion)}
+                    activeOpacity={0.7}
+                    disabled={savingModal}
                   >
-                    {/* Nombre de la profesión */}
                     <Text style={[
-                        styles.modalItemText, // Estilo base del texto
-                        isSelected && styles.modalItemTextSelected // Estilo si está seleccionada (blanco)
+                        styles.modalItemText,
+                        isSelected && styles.modalItemTextSelected
                     ]}>
                       {item.nombre_profesion}
                     </Text>
                   </TouchableOpacity>
                 );
               }}
-              ListFooterComponent={<View style={{ height: 20 }} />} // Espacio al final
-              showsVerticalScrollIndicator={false} // Ocultar barra de scroll
+              ListFooterComponent={<View style={{ height: 20 }} />}
+              showsVerticalScrollIndicator={false} 
             />
           )}
 
           {/* Botones fijos al final del Modal */}
           <View style={styles.modalButtons}>
             {savingModal ? (
-              // Loader mientras se guarda
               <ActivityIndicator size="large" color="#228B22"/>
             ) : (
-              // Botón Guardar
               <Button title="Guardar Cambios" onPress={handleSaveProfesiones} color="#228B22" />
             )}
-            {/* Botón Cancelar (deshabilitado si se está guardando) */}
             <View style={{marginTop: 10}}>
               <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#B22222" disabled={savingModal} />
             </View>
@@ -645,183 +587,173 @@ const MiPerfilScreen = ({ navigation }) => {
   );
 };
 
-// --- ESTILOS --- (Añadidas mejoras y comentarios)
 const styles = StyleSheet.create({
-  // Contenedor principal del ScrollView
   container: {
-       flex: 1, // Ocupa todo el espacio disponible
-       backgroundColor: "#fff", // Fondo blanco
+       flex: 1,
+       backgroundColor: "#fff",
   },
-  // Contenedor interno del ScrollView para aplicar padding
   scrollContentContainer: {
-       paddingHorizontal: 20, // Padding horizontal
-       paddingVertical: 15,   // Padding vertical
-       paddingBottom: 60, // Espacio extra al final
+       paddingHorizontal: 20, 
+       paddingVertical: 15,   
+       paddingBottom: 60,
   },
-  // Título principal
+  
   title: {
       fontSize: 24,
       fontWeight: "bold",
-      color: "#228B22", // Verde bosque
+      color: "#228B22",
       textAlign: "center",
       marginBottom: 15,
   },
-  // Indicador de rol activo
+
   roleIndicator: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333", // Gris oscuro
+    color: "#333",
     textAlign: "center",
-    marginBottom: 20, // Más espacio
-    backgroundColor: "#f0f0f0", // Fondo gris claro
+    marginBottom: 20,
+    backgroundColor: "#f0f0f0",
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 8,
-    overflow: 'hidden', // Asegura bordes redondeados
+    overflow: 'hidden',
   },
-  // Etiqueta para los inputs
+  
   label: {
-      color: "#006400", // Verde oscuro
+      color: "#006400", 
       marginTop: 10,
       marginBottom: 5,
       fontSize: 16,
       fontWeight: '500',
   },
-  // Estilo para inputs editables
+  
   input: {
       borderWidth: 1,
-      borderColor: "#006400", // Borde verde oscuro
+      borderColor: "#006400", 
       paddingVertical: 12,
       paddingHorizontal: 15,
       borderRadius: 8,
-      backgroundColor: "#F8FFF8", // Fondo verde muy claro
+      backgroundColor: "#F8FFF8",
       fontSize: 16,
-      color: '#333', // Color de texto
+      color: '#333', 
   },
-  // Estilo para inputs deshabilitados (vista trabajador)
+  
   inputDisabled: {
     borderWidth: 1,
-    borderColor: "#ccc", // Borde gris claro
+    borderColor: "#ccc", 
     paddingVertical: 12,
     paddingHorizontal: 15,
     borderRadius: 8,
-    backgroundColor: "#f4f4f4", // Fondo gris claro
-    color: '#555', // Texto gris oscuro
+    backgroundColor: "#f4f4f4",
+    color: '#555', 
     fontSize: 16,
   },
-  // Subtítulos para separar secciones
+  
   subtitle: {
-      color: "#006400", // Verde oscuro
+      color: "#006400",
       fontWeight: "bold",
-      marginTop: 25, // Más separación
+      marginTop: 25,
       fontSize: 19,
       marginBottom: 10,
-      borderTopColor: '#e0e0e0', // Línea separadora sutil
+      borderTopColor: '#e0e0e0',
       borderTopWidth: 1,
-      paddingTop: 15, // Espacio sobre el subtítulo
+      paddingTop: 15,
   },
-  // Texto informativo (ej. "aún no has agregado...")
+  
   infoText: {
     fontStyle: 'italic',
-    color: '#555', // Gris oscuro
+    color: '#555',
     textAlign: 'center',
     marginVertical: 15,
     fontSize: 15,
   },
-  // Contenedor para las "píldoras" de profesiones
+  
   profesionContainer: {
-    flexDirection: 'row', // Alinear en fila
-    flexWrap: 'wrap', // Permitir que bajen de línea
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: 10,
     marginTop: 5,
   },
-  // Estilo de cada "píldora" de profesión
   profesionTag: {
-    backgroundColor: '#007AFF', // Azul
+    backgroundColor: '#007AFF',
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 18, // Muy redondeado
+    borderRadius: 18,
     marginRight: 8,
     marginBottom: 8,
-    // Sombra (puede variar visualmente entre plataformas)
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.20,
     shadowRadius: 1.41,
-    elevation: 2, // Sombra en Android
+    elevation: 2,
   },
-  // Texto dentro de la píldora
+
   profesionText: {
-    color: 'white', // Texto blanco
+    color: 'white',
     fontWeight: '600',
     fontSize: 15,
   },
 
-  // --- Estilos del Modal ---
   modalContainer: {
-    flex: 1, // Ocupar toda la pantalla
-    paddingTop: Platform.OS === 'ios' ? 60 : 40, // Más padding superior (ajuste iOS/Android)
+    flex: 1, 
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingHorizontal: 20,
     backgroundColor: 'white',
   },
   modalTitle: {
-    fontSize: 24, // Título grande
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 30, // Más espacio
+    marginBottom: 30,
     color: '#333',
   },
-  // Estilo base del botón/item en el modal
+  
   modalItem: {
-    flexDirection: 'row', // Alinear horizontalmente (innecesario si solo hay texto)
-    justifyContent: 'center', // Centrar contenido (texto)
-    alignItems: 'center', // Centrar verticalmente
-    paddingVertical: 16, // Más altura
-    borderWidth: 2, // Borde más grueso
-    borderColor: '#007AFF', // Borde azul por defecto
-    borderRadius: 10, // Más redondeado
+    flexDirection: 'row', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderWidth: 2, 
+    borderColor: '#007AFF', 
+    borderRadius: 10,
     paddingHorizontal: 15,
-    marginBottom: 12, // Más separación
-    backgroundColor: '#f9f9f9', // Fondo claro
-    // Transición suave (puede no funcionar en web)
-    // transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
+    marginBottom: 12,
+    backgroundColor: '#f9f9f9',
   },
-  // Estilo cuando el botón está seleccionado (Verde)
+  
   modalItemSelected: {
-    backgroundColor: '#2E8B57', // Verde mar oscuro
-    borderColor: '#236C43',     // Borde verde más oscuro
+    backgroundColor: '#2E8B57',
+    borderColor: '#236C43',
   },
-  // Estilo del texto por defecto (Azul)
+  
   modalItemText: {
     fontSize: 18,
-    color: '#007AFF', // Texto azul
+    color: '#007AFF',
     fontWeight: '600',
-    textAlign: 'center', // Asegurar centrado del texto
-     // Transición suave del color (puede no funcionar en web)
-    // transition: 'color 0.2s ease-in-out',
+    textAlign: 'center',
   },
-  // Estilo del texto cuando está seleccionado (Blanco)
+  
   modalItemTextSelected: {
-    color: '#FFFFFF', // Texto blanco
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  // Contenedor de botones al final del modal
+  
   modalButtons: {
-    marginTop: 'auto', // Empuja al fondo
+    marginTop: 'auto', 
     paddingTop: 15,
-    paddingBottom: Platform.OS === 'ios' ? 35 : 25, // Padding inferior seguro
+    paddingBottom: Platform.OS === 'ios' ? 35 : 25, 
     borderTopColor: '#e0e0e0',
     borderTopWidth: 1,
-    backgroundColor: 'white', // Fondo para tapar contenido detrás si es necesario
+    backgroundColor: 'white', 
   },
-  // Overlay para modals de éxito/error
+
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semitransparente
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  // Contenido del modal de éxito
+  
   successModalContent: {
     backgroundColor: '#fff',
     padding: 20,
@@ -841,7 +773,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
   },
-  // Contenido del modal de error
+  
   errorModalContent: {
     backgroundColor: '#fff',
     padding: 20,

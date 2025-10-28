@@ -5,6 +5,7 @@ const BASE_URL = "http://127.0.0.1:8000/api";
 
 import { useIsFocused } from "@react-navigation/native";
 import { useAuth } from "../../contexts/AuthProvider";
+import api from "../../api/api";
 
 export default function HomeTrabajadorScreen({ navigation }) {
   const { workerProfile, misPostulaciones, fetchMisPostulaciones, misProfesiones } = useAuth();
@@ -134,10 +135,7 @@ export default function HomeTrabajadorScreen({ navigation }) {
        }
     }
 
-    // --- CORRECCIÓN AQUÍ ---
-    // Comparar con el ID anidado en el objeto 'trabajo' de la postulación
     const isJobAlreadyApplied = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.trabajo?.id_trabajo === item.id_trabajo);
-    // --- FIN CORRECCIÓN ---
 
     return (
       <TouchableOpacity
@@ -160,10 +158,41 @@ export default function HomeTrabajadorScreen({ navigation }) {
     );
   };
 
-  const renderModalContent = () => {
-     if (!selectedJob) return null;
+  const getEstadoActualizadoTrabajo = async (id_trabajo) => {
+    const response = await api.get(`${BASE_URL}/trabajos/${id_trabajo}/`);
+    console.log("getEstadoActualizadoTrabajo")
+    const data = response.data;
+    console.log("response: ", data)
 
-     // Usar la misma lógica corregida aquí también
+    const estadoActualizado = data.estado?.id_estado;
+
+    return estadoActualizado;
+  }
+
+  const renderModalContent = () => {
+    const [estadoActualizado, setEstadoActualizado] = useState("");
+
+    /* traigo de nuevo el estado del trabajo seleccionado
+    no es muy elegante pero funciona
+    da error 404 porque intenta hacer una consulta al back /api/trabajos/undefined/
+    pero eso pasa porque ese id que se consulta en nulo cuando no se pickea un trabajo
+    creo que arruina el funcionamiento de toda la app, pero les va a aparecer ese error
+    en consola. no se asusten si queda, capaz lo borro de alguna manera
+    */ 
+    const idTrabajoActual = selectedJob?.id_trabajo;
+    useEffect(() => {
+      const fetchEstadoActualizado = async () => {
+        const estado_actualizado = await getEstadoActualizadoTrabajo(idTrabajoActual);
+        setEstadoActualizado(estado_actualizado);
+      };
+      fetchEstadoActualizado();
+    }, [idTrabajoActual]);
+
+    // trae correctamente el estado actualizado
+    // console.log("estadoActualizado: ", estadoActualizado)
+     
+     if (!selectedJob) return null;
+     
      const yaPostulado = Array.isArray(misPostulaciones) && misPostulaciones.some(p => p.trabajo?.id_trabajo === selectedJob.id_trabajo);
      const isAssignedToMe = selectedJob?.estado?.id_estado === 3 && selectedJob?.id_trabajador === workerProfile?.id_trabajador;
 
@@ -197,34 +226,45 @@ export default function HomeTrabajadorScreen({ navigation }) {
                 <Text style={styles.modalLabel}>Fecha de Publicación:</Text>
                 <Text style={styles.modalText}>{fechaPublicacion}</Text>
 
-                {isAssignedToMe ? (
-                    <>
-                    <Text style={[styles.jobState, styles.acceptedState, {textAlign: 'center', marginVertical: 15}]}>¡Este trabajo te fue asignado!</Text>
+                {estadoActualizado === 6 ? (
+                  <>
+                    <Text style={[styles.jobState, { color: 'red', textAlign: 'center', marginVertical: 15 }]}>EL TRABAJO HA SIDO CANCELADO POR SU CREADOR</Text>
                     <View style={styles.modalButtonContainer}>
-                        <Button title="Ir al Chat" onPress={() => handleChatPress(selectedJob.id_trabajo)} color="#007AFF"/>
-                        <View style={{marginTop: 10}}>
-                        <Button title="Cerrar" onPress={closeModal} color="#6c757d"/>
-                        </View>
+                      <Button title="Cerrar" onPress={closeModal} color="#6c757d" />
                     </View>
-                    </>
+                  </>
+                ) : isAssignedToMe ? (
+                  <>
+                    <Text style={[styles.jobState, styles.acceptedState, { textAlign: 'center', marginVertical: 15 }]}>
+                      ¡Este trabajo te fue asignado!
+                    </Text>
+                    <View style={styles.modalButtonContainer}>
+                      <Button title="Ir al Chat" onPress={() => handleChatPress(selectedJob.id_trabajo)} color="#007AFF" />
+                      <View style={{ marginTop: 10 }}>
+                        <Button title="Cerrar" onPress={closeModal} color="#6c757d" />
+                      </View>
+                    </View>
+                  </>
                 ) : yaPostulado ? (
-                    <>
-                    <Text style={styles.alreadyAppliedText}>Ya te has postulado. Esperando confirmación del contratador.</Text>
-                    <View style={{marginTop: 15}}>
-                        <Button title="Cerrar" onPress={closeModal} color="#6c757d"/>
+                  <>
+                    <Text style={styles.alreadyAppliedText}>
+                      Ya te has postulado. Esperando confirmación del contratador.
+                    </Text>
+                    <View style={{ marginTop: 15 }}>
+                      <Button title="Cerrar" onPress={closeModal} color="#6c757d" />
                     </View>
-                    </>
+                  </>
                 ) : (
-                    <View style={styles.modalButtonContainer}>
+                  <View style={styles.modalButtonContainer}>
                     {isPosting ? (
-                        <ActivityIndicator color="#007AFF" size="large" />
+                      <ActivityIndicator color="#007AFF" size="large" />
                     ) : (
-                        <Button title="Confirmar Postulación" onPress={handlePostulate} color="#28a745" />
+                      <Button title="Confirmar Postulación" onPress={handlePostulate} color="#28a745" />
                     )}
-                    <View style={{marginTop: 10}}>
-                        <Button title="Cancelar" onPress={closeModal} color="#dc3545" disabled={isPosting}/>
+                    <View style={{ marginTop: 10 }}>
+                      <Button title="Cancelar" onPress={closeModal} color="#dc3545" disabled={isPosting} />
                     </View>
-                    </View>
+                  </View>
                 )}
           </ScrollView>
      );
