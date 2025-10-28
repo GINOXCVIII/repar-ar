@@ -340,7 +340,7 @@ class TrabajoView(APIView):
 
         if id_contratador:
             try:
-                items = items.filter(id_contratador_id=int(id_contratador))
+                items = items.filter(id_contratador_id=id_contratador)
             except ValueError:
                 items = Trabajo.objects.none()
 
@@ -352,18 +352,19 @@ class TrabajoView(APIView):
                 items = Trabajo.objects.none()
                 
         # Filtro por estado del trabajo
-        print(f"id_estado: {id_estado}")
-        if id_estado == "1,2":
-            estados_filtrar = [int(id_estado[0]), int(id_estado[2])]
-            try:
-                items = items.filter(id_estado__in=estados_filtrar)
-            except:
-                items = Trabajo.objects.none()
-        else: # Vale para lo otro
-            try:
-                items = items.filter(id_estado_id=id_estado)
-            except:
-                items = Trabajo.objects.all()
+        # print(f"id_estado: {id_estado}")
+        if id_estado:
+            if id_estado == "1,2":
+                estados_filtrar = [int(id_estado[0]), int(id_estado[2])]
+                try:
+                    items = items.filter(id_estado__in=estados_filtrar)
+                except:
+                    items = Trabajo.objects.none()
+            else: # Vale para otro id individual
+                try:
+                    items = items.filter(id_estado_id=id_estado)
+                except:
+                    items = Trabajo.objects.all()
 
         serializer = TrabajoSerializer(items, many=True)
         return Response(serializer.data)
