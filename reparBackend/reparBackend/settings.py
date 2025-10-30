@@ -18,9 +18,8 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR,  'repar-ar-firebase-adminsdk-fbsvc-7d6ecb6fe2.json')
-# FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'reparBackend', 'repar-ar-firebase-adminsdk-fbsvc-7d6ecb6fe2.json')
+# FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR,  'repar-ar-firebase-adminsdk-fbsvc-7d6ecb6fe2.json')
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR,  'repar-ar-clave.json')
 
 if not firebase_admin._apps:
     cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
