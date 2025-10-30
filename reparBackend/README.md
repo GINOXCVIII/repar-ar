@@ -37,5 +37,16 @@ Corre el servidor en *localhost* en puerto *8000*
 
 Fuente: [django-admin and manage.py](https://docs.djangoproject.com/en/5.2/ref/django-admin/)
 
-¡¡¡**PELIGRO:** NO USAR el archivo test_token_gen.py sin avisar!!!
+## Acerca de el uso de Firebase
+Este proyecto tiene una integración con Firebase para manejar el login/signin de los usuarios, y es necesario proveer una clave privada para autenticación.
+Las claves pueden generarlas los miembros del proyecto **con acceso a la consola de Firebase** ([Firebase console](https://console.firebase.google.com/)).
+Desde allí, dentro del proyecto de *repar-AR*, se dirigen a:
 
+> *Configuración del proyecto > Cuentas de servicio > Generar nueva clave privada*
+
+Se descargará un archivo con el nombre ***repar-ar-firebase-xxxx.json***.
+Este archivo se debe copiar en la carpeta *repar-ar/reparBackend/* (donde está *manage.py*) y se debe renombrar a ***repar-ar-clave.json***.
+
+> repar-ar-firebase-xxxx.json --> ***repar-ar-clave.json***
+
+Si no tenés acceso a la consola de Firebase ... bueno, no sé ...
